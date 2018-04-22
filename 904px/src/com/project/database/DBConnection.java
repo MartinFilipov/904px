@@ -33,7 +33,7 @@ public final class DBConnection {
 		return connection;
 	}
 	
-	public static DBConnection getInstance() throws ClassNotFoundException, SQLException {
+	public static synchronized DBConnection getInstance() throws ClassNotFoundException, SQLException {
 		if (instance == null) {
 			instance = new DBConnection();
 		}
