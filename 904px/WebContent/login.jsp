@@ -24,6 +24,7 @@
 	-->
 
 	<div class="limiter">
+	<form action="./login" method="post">
 		<div class="container-login100" style="background-image: url('images/bg-01.jpg');">
 			<div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
 				<form class="login100-form validate-form flex-sb flex-w">
@@ -70,7 +71,7 @@
 							Sign In
 						</button>
 					</div>
-
+</form>
 					<div class="w-full text-center p-t-55">
 						<span class="txt2">
 							Not a member?
@@ -84,8 +85,8 @@
 			</div>
 		</div>
 	</div>
-		<% request.getSession().setAttribute("username", "To be inserted!");
-	response.sendRedirect("./");%>
+			<%// request.getSession().setAttribute("username", "To be inserted!");
+			//response.sendRedirect("./");%>
 
 	<div id="dropDownSelect1"></div>
 	

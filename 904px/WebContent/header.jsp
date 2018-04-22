@@ -43,10 +43,13 @@
 
         <div class="col-sm-3 col-md-3 pull-right">
         <ul class="nav navbar-nav">
+        	<%if(request.getSession(false)==null || request.getSession(false).getAttribute("username")==null){ %>
             <li><a href="login.jsp">Log in</a></li>
             <li><a href="register.jsp">Register</a></li>
-            <li><a href="profile.jsp">Profile</a></li>
-            <li><a href="logout.jsp">Log out</a></li>
+            <%}else{ %>
+            <li><a href="./profile">Profile</a></li>
+            <li><a href="./logout">Log out</a></li>
+            <%} %>
       	</ul>
             </div>
             <form class="navbar-form" role="search">

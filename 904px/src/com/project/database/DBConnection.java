@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public final class DBConnection {
 	private static final String DB_HOST = "localhost";
 	private static final String DB_USER = "root";
-	private static final String DB_PASS = "MySqlRoot123";
+	private static final String DB_PASS = "h3qb575fufgdb";
 	private static final String DB_PORT = "3306";
 	private static final String DB_SCHEMA = "904pxdb";
 	private static final String DB_OPTIONS = "autoReconnect=true&useSSL=false";
