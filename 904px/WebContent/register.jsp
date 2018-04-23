@@ -29,7 +29,7 @@
 <div class="whole-body">
 	<div class="login-section-agileits">
 		<h3 class="form-head">register online today, Its'free!</h3>
-		<form action="#" method="post">
+		<form action="./register" method="post">
 			<div class="w3ls-icon">
 				<span class="fa fa-user" aria-hidden="true"></span>
 				<input type="text" class="lock" name="name" placeholder="username" required="" />
@@ -47,6 +47,7 @@
 				<input type="password" class="lock" id="password2" name="confirm password" placeholder="Confirm Password" required="" />
 			</div>
 			<input type="submit" value="register now">
+			</a>
 		</form>
 	</div>
 
