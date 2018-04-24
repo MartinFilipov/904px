@@ -25,9 +25,9 @@ public class loginServlet extends HttpServlet {
 		int id=0;
 		try {
 			id=dao.login(username, password);
-			HttpSession session=request.getSession();
+		  	HttpSession session=request.getSession();
 			session.setAttribute("username", id);
-			session.setMaxInactiveInterval(15);
+			session.setMaxInactiveInterval(1000);
 			response.sendRedirect("./");
 		} catch (UserException e) {
 			System.out.println("wrong username or password!");

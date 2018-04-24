@@ -30,8 +30,12 @@ public class registerServlet extends HttpServlet {
 			return;
 		}
 		
+		request.setAttribute("registered", "yes");
+		request.getRequestDispatcher("./").forward(request, response);
+		/*
 		request.getSession().setAttribute("registered", "yes");
 		response.sendRedirect("./");
+		*/
 	}
 
 }

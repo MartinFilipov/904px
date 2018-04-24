@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.project.exceptions.UserException;
+import com.project.user.User;
 import com.project.user.UserDAO;
 
 @WebServlet("/profile")
@@ -22,18 +23,32 @@ public class profileServlet extends HttpServlet {
 			response.sendRedirect("./login.jsp");
 			return;
 		}
-		
+		int userID=(int)(request.getSession(false).getAttribute("username"));
 		UserDAO dao = UserDAO.getInstance();
 //		List<Post> posts = dao.getAllPosts();
 //		request.setAttribute("posts", posts);
-		String username="Invalid username";
+//		String username="Invalid username";
+//		try {
+//			username = dao.getUsername(userID);
+//		} catch (UserException e) {
+//			response.getWriter().println("Something went wrong, please come back later");
+//			return;
+//		}
+		User user;
 		try {
-			username = dao.getUsername((int)(request.getSession(false).getAttribute("username")));
+			user=dao.getUser(userID);
 		} catch (UserException e) {
 			response.getWriter().println("Something went wrong, please come back later");
 			return;
 		}
-		request.setAttribute("name", username);
+		request.setAttribute("email",user.getEmail());
+		request.setAttribute("username",user.getUsername());
+		request.setAttribute("firstName",user.getFirstName());
+		request.setAttribute("lastName",user.getLastName());
+		request.setAttribute("profilePictureURL",user.getProfilePictureURL());
+		request.setAttribute("coverPhotoURL",user.getCoverPhotoURL());
+		request.setAttribute("affection",user.getAffection());
+		request.setAttribute("photoViews",user.getPhotoViews());
 		RequestDispatcher dispatcher = request.getRequestDispatcher("profile.jsp");
 		dispatcher.forward(request, response);
 		
