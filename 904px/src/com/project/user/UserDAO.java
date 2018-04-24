@@ -17,6 +17,8 @@ public class UserDAO implements IUserDAO {
 	private static final String ADD_USER_TO_DB = "INSERT INTO users(username, password, email) VALUES (?,sha1(?),?);";
 	private static final String VALIDATE_USER = "SELECT user_id, username, password FROM users WHERE username = ? AND password = sha1(?);";
 	private static final String GET_USERNAME_FROM_DB = "SELECT username from users WHERE user_id = ?;";
+	private static final String GET_USER_FROM_DB ="SELECT email,username,first_name,last_name,profile_picture,cover_photo,affection,photo_views FROM users WHERE user_id = ?;";				
+	private static final String UPDATE_USER_FROM_DB="UPDATE users set first_name=?,last_name=?,profile_picture=?,cover_photo=? where user_id=?;";
 	private static UserDAO instance;
 	private Connection connection;
 
@@ -52,7 +54,46 @@ public class UserDAO implements IUserDAO {
 			throw new UserException("Database is not working", e);
 		}
 	}
-
+	public boolean updateUser(int id,String firstName,String lastName,String profilePictureURL,String coverPhotoURL) throws UserException{
+		try{
+		PreparedStatement statement=connection.prepareStatement(UPDATE_USER_FROM_DB);
+		statement.setString(1, firstName);
+		statement.setString(2, lastName);
+		statement.setString(3, profilePictureURL);
+		statement.setString(4, coverPhotoURL);
+		statement.setInt(5, id);
+		statement.executeUpdate();
+		return true;
+		}catch(SQLException e){
+			throw new UserException("Database is not working",e);
+		}
+	}
+	public User getUser(int id) throws UserException{
+		try{
+			PreparedStatement statement=connection.prepareStatement(GET_USER_FROM_DB);
+			statement.setInt(1, id);
+			ResultSet set=statement.executeQuery();
+			User user;
+			//email,username,first_name,last_name,profile_picture,cover_photo,affection,photo_views
+			if(set.next()){
+				String email=set.getString("email");
+				String username=set.getString("username");
+				String firstName=set.getString("first_name");
+				String lastName=set.getString("last_name");
+				String profilePictureURL=set.getString("profile_picture");
+				String coverPhotoURL=set.getString("cover_photo");
+				int affection=set.getInt("affection");
+				int photo_views=set.getInt("photo_views");
+				user=new User(username,email,firstName,lastName,profilePictureURL,coverPhotoURL,affection,photo_views);
+				return user;
+			}else{
+				throw new UserException("Wrong id");
+			}
+		}
+		catch(SQLException e){
+			throw new UserException("Database is not working",e);
+		}
+	}
 	@Override
 	public int login(String username, String password) throws UserException {
 		try {

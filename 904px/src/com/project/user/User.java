@@ -9,10 +9,28 @@ public class User {
 	
 	private String username;
 	private String email;
+	private String firstName;
+	private String lastName;
+	private String profilePictureURL;
+	private String coverPhotoURL;
+	private int affection;
+	private int photoViews;
 	
 	public User(String username, String email) throws UserException {
 		setUsername(username);
 		setEmail(email);
+	}	
+
+	public User(String username, String email, String firstName, String lastName, String profilePictureURL,
+			String coverPhotoURL, int affection, int photoViews) throws UserException {
+		setUsername(username);
+		setEmail(email);
+		setFirstName(firstName);
+		setLastName(lastName);
+		setProfilePictureURL(profilePictureURL);
+		setCoverPhotoURL(coverPhotoURL);
+		setAffection(affection);
+		setPhotoViews(photoViews);
 	}
 
 	private void setUsername(String username) throws UserException {
@@ -30,7 +48,60 @@ public class User {
 			throw new UserException("Invalid email");
 		}
 	}
+	
+	
 
+	private void setFirstName(String firstName){
+		if(firstName!=null && firstName.trim().length()>0){
+			this.firstName = firstName;
+		}else{
+			this.firstName="";
+		}
+	}
+
+
+
+	private void setLastName(String lastName){
+		if(lastName!=null && lastName.trim().length()>0){
+			this.lastName = lastName;
+		}else{
+			this.lastName="";
+		}
+	}
+
+
+
+	private void setProfilePictureURL(String profilePictureURL){
+		if(profilePictureURL!=null){
+			this.profilePictureURL = profilePictureURL;
+		}else{
+			this.profilePictureURL="";
+		}
+	}
+
+
+
+	private void setCoverPhotoURL(String coverPhotoURL){
+		if(coverPhotoURL!=null){
+			this.coverPhotoURL = coverPhotoURL;
+		}else{
+			this.coverPhotoURL="";
+		}
+	}
+
+	private void setAffection(int affection){
+		if(affection>=0){
+			this.affection = affection;	
+		}
+	}
+	
+	private void setPhotoViews(int photoViews){
+		if(photoViews>=0){
+			this.photoViews=photoViews;
+		}
+	}
+	
+	
 	public String getUsername() {
 		return username;
 	}
@@ -38,6 +109,31 @@ public class User {
 	public String getEmail() {
 		return email;
 	}
+	
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+	
+	public String getProfilePictureURL() {
+		return profilePictureURL;
+	}
+
+	public String getCoverPhotoURL() {
+		return coverPhotoURL;
+	}
+
+	public int getAffection() {
+		return affection;
+	}
+
+	public int getPhotoViews() {
+		return photoViews;
+	}
+
 
 	@Override
 	public int hashCode() {
