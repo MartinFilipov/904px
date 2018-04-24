@@ -1,4 +1,8 @@
 <%@include file="header.jsp" %>
+<h1>Welcome <%=request.getAttribute("name")%></h1>
+<button id="upload" type="button" class="btn btn-secondary">Upload</button>
+
+<script src="./js/upload.js"></script>
 <div align="center" style="border:0px solid black">
 <%if(request.getAttribute("firstName")!=""){ %>
 <h1>Welcome <%=request.getAttribute("firstName")%></h1>
