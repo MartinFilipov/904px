@@ -28,10 +28,8 @@ public class UserDAO implements IUserDAO {
 
 		} catch (ClassNotFoundException e) {
 			System.out.println("Missing database connection driver");
-			return;
 		} catch (SQLException e) {
 			System.out.println("Something went wrong with the databse");
-			return;
 		}
 	}
 
@@ -163,7 +161,7 @@ public class UserDAO implements IUserDAO {
 
 		} catch (SQLException e) {
 			System.out.println("Something went wrong with the database");
-			return null;
+			return new ArrayList<>();
 		}
 
 	}
