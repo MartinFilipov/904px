@@ -2,13 +2,19 @@ package com.project.post;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
+import com.project.exceptions.UserException;
 import com.project.imageCharacteristics.ImageCharacteristics;
+import com.project.user.User;
 
 import project.com.location.Location;
 
@@ -19,7 +25,7 @@ public class Post {
 	private static final int CAMERA_EXPOSURE_TIME_DESCRIPTION_ID = 33434;
 	private static final int CAMERA_ISO_SPEED_RATINGS_DESCRIPTION_ID = 34855;
 	private static final int CAMERA_DATE_TAKEN_DESCRIPTION_ID = 36867;
-	
+
 	private final String imageURL;
 	private boolean nsfw;
 	private String title;
@@ -28,7 +34,8 @@ public class Post {
 	private String cameraModel;
 	private Location location;
 	private ImageCharacteristics imageCharacteristics;
-	
+//	private List<Comment> comments;
+
 	private Post(Builder builder) {
 		this.imageURL = builder.imageURL;
 		this.nsfw = builder.nsfw;
@@ -38,8 +45,23 @@ public class Post {
 		this.cameraModel = builder.cameraModel;
 		this.location = builder.location;
 		this.imageCharacteristics = builder.imageCharacteristics;
+//		this.comments = new ArrayList<Comment>();
 	}
-	
+
+//	public boolean addComment(User commenter, String comment) throws UserException {
+//		if (commenter == null || comment == null || !(comment.trim().length() > 0)) {
+//			throw new UserException("Invalid user or comment");
+//		}
+//		synchronized (comments) {
+//			this.comments.add(new Comment(commenter, comment));
+//			return true;
+//		}
+//	}
+//
+//	public Collection<Comment> getComments() {
+//		return Collections.unmodifiableCollection(comments);
+//	}
+
 	public static class Builder {
 		private final String imageURL;
 
@@ -50,7 +72,7 @@ public class Post {
 		private String description = "";
 		private Location location = null;
 		private ImageCharacteristics imageCharacteristics = null;
-		
+
 		public Builder(String imageURL) {
 			this.imageURL = imageURL == null ? "" : imageURL;
 			try {
@@ -60,59 +82,60 @@ public class Post {
 				this.imageCharacteristics = new ImageCharacteristics("", "", "", "", "");
 			}
 		}
-		
+
 		public Builder category(PostCategory category) {
 			if (category != null) {
 				this.category = category.toString();
 			}
 			return this;
 		}
-		
-		public Builder title(String title) { 
+
+		public Builder title(String title) {
 			if (title != null) {
 				this.title = title;
 			}
 			return this;
 		}
-		
+
 		public Builder nsfw(boolean nsfw) {
 			this.nsfw = nsfw;
 			return this;
 		}
-		
+
 		public Builder description(String description) {
 			if (description != null) {
 				this.description = description;
 			}
 			return this;
 		}
-		
+
 		public Builder location(String city, String country) {
 			if (city != null && country != null) {
 				this.location = new Location(city, country);
 			}
 			return this;
 		}
-		
+
 		public Post build() {
 			return new Post(this);
 		}
-		
-		private ImageCharacteristics initializeImageCharacteristics(String imageURL) throws ImageProcessingException, IOException {
+
+		private ImageCharacteristics initializeImageCharacteristics(String imageURL)
+				throws ImageProcessingException, IOException {
 			File file = new File(imageURL);
-			
+
 			Metadata metadata = ImageMetadataReader.readMetadata(file);
-			
+
 			ExifIFD0Directory directoryIFDO = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
 			ExifSubIFDDirectory directorySubIFD = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
-			
+
 			String model = "";
 			String focalLength = "";
 			String fNumber = "";
 			String exposureTime = "";
 			String isoSpeedRatings = "";
 			String dateTaken = "";
-			
+
 			if (directoryIFDO != null) {
 				model = directoryIFDO.getDescription(CAMERA_MODEL_DESCRIPTION_ID);
 				this.cameraModel = model;
@@ -122,10 +145,10 @@ public class Post {
 				fNumber = directorySubIFD.getDescription(CAMERA_F_NUMBER_DESCRIPTION_ID);
 				exposureTime = directorySubIFD.getDescription(CAMERA_EXPOSURE_TIME_DESCRIPTION_ID);
 				isoSpeedRatings = directorySubIFD.getDescription(CAMERA_ISO_SPEED_RATINGS_DESCRIPTION_ID);
-				//returns only date
+				// returns only date
 				dateTaken = directorySubIFD.getDescription(CAMERA_DATE_TAKEN_DESCRIPTION_ID).split(" ")[0];
 			}
-			
+
 			return new ImageCharacteristics(focalLength, fNumber, exposureTime, isoSpeedRatings, dateTaken);
 		}
 	}
@@ -153,7 +176,7 @@ public class Post {
 	public String getCameraModel() {
 		return cameraModel;
 	}
-	
+
 	public ImageCharacteristics getImageCharacteristics() {
 		return imageCharacteristics;
 	}
@@ -164,5 +187,5 @@ public class Post {
 				+ ", location=" + location + ", camera model=" + cameraModel + ", category=" + category + "\n"
 				+ "image characteristics=\n" + this.imageCharacteristics.toString();
 	}
-		
+
 }

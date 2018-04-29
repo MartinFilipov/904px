@@ -4,9 +4,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.project.database.DBConnection;
+import com.project.exceptions.UserException;
 import com.project.imageCharacteristics.ImageCharacteristics;
+import com.project.user.User;
 
 public class PostDAO {
 	private static final int INVALID_ID = 0;
@@ -19,6 +23,10 @@ public class PostDAO {
 			"DELETE FROM cameras WHERE camera_id = ?";
 	private static final String ADD_CAMERA_MODEL_TO_DATABASE = 
 			"INSERT INTO cameras(model) VALUES(?);";
+	private static final String ADD_COMMENT_TO_DATABASE=
+			"INSERT into comments(text,post_id,user_id) values (?,?,?);";
+	private static final String GET_ALL_COMMENTS_FROM_DATABASE=
+			"SELECT text,username FROM comments c JOIN users u on c.user_id=u.user_id WHERE post_id=?";
 	private static PostDAO instance;
 	private Connection connection;
 
@@ -178,6 +186,40 @@ public class PostDAO {
 			System.out.println("--deleteImageCharacteristicsFromDatabaseById-- SQL syntax error");
 		}
 		return false;
+	}
+	
+	public boolean addComment(int userID,int postID,String comment){
+		try{
+			PreparedStatement statement=connection.prepareStatement(ADD_COMMENT_TO_DATABASE);
+			statement.setString(1, comment);
+			statement.setInt(2, postID);
+			statement.setInt(3, userID);
+			statement.executeUpdate();
+			return true;
+		}catch(SQLException e){
+			System.out.println("Something went wrong with the database while adding a comment");
+			return false;
+		}
+	}
+	
+	
+	
+	// FIX this
+	public List<Comment> getAllComments(int postID) throws PostException{
+		try{
+			PreparedStatement statement=connection.prepareStatement(GET_ALL_COMMENTS_FROM_DATABASE);
+			statement.setInt(1, postID);
+			statement.executeQuery();
+			ResultSet set = statement.executeQuery();
+			
+			List<Comment> comments = new ArrayList<>();
+			while (set.next()) {
+				comments.add(new Comment(set.getString("text"),set.getString("username")));				
+			}
+			return comments;
+		}catch(SQLException e){
+			throw new PostException("Something went wrong with the database");
+		}
 	}
 
 }
