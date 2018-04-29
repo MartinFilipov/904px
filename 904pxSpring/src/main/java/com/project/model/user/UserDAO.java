@@ -13,16 +13,16 @@ import com.project.model.exceptions.UserException;
 import com.project.model.interfaces.IUserDAO;
 
 
-
 public class UserDAO implements IUserDAO {
 	private static final String ADD_USER_TO_DB = "INSERT INTO users(username, password, email) VALUES (?,sha1(?),?);";
 	private static final String VALIDATE_USER = "SELECT user_id, username, password FROM users WHERE username = ? AND password = sha1(?);";
 	private static final String GET_USERNAME_FROM_DB = "SELECT username from users WHERE user_id = ?;";
 	private static final String GET_USER_FROM_DB ="SELECT email,username,first_name,last_name,profile_picture,cover_photo,affection,photo_views FROM users WHERE user_id = ?;";				
 	private static final String UPDATE_USER_FROM_DB="UPDATE users set first_name=?,last_name=?,profile_picture=?,cover_photo=? where user_id=?;";
+	
 	private static UserDAO instance;
 	private Connection connection;
-
+	
 	private UserDAO() {
 		try {
 			connection = DBConnection.getInstance().getConnection();
@@ -33,14 +33,14 @@ public class UserDAO implements IUserDAO {
 			System.out.println("Something went wrong with the databse");
 		}
 	}
-
+	
 	public static UserDAO getInstance() {
 		if (instance == null) {
 			instance = new UserDAO();
 		}
 		return instance;
 	}
-
+	
 	public String getUsername(int id) throws UserException {
 		try {
 			PreparedStatement statement = connection.prepareStatement(GET_USERNAME_FROM_DB);

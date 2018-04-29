@@ -5,31 +5,33 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.project.model.database.DBConnection;
 import com.project.model.imageCharacteristics.ImageCharacteristics;
 
-
-
 public class PostDAO {
 	private static final int INVALID_ID = 0;
 	private static final int KEY_COLUMN_ID = 1;
-	private static final String ADD_IMAGE_CHARACTERISTICS_TO_DATABASE = 
-			"INSERT INTO image_characteristics(focal_length, f_number, exposure_time, iso_speed_ratings, date_taken, camera_id) VALUES(?,?,?,?,?,?);";
-	private static final String ADD_POST_TO_DATABASE = 
-			"INSERT INTO posts(image_url, title, description, nsfw, image_characteristics_id) VALUES(?,?,?,?,?);";
-	private static final String DELETE_CAMERA_FROM_DATABASE = 
-			"DELETE FROM cameras WHERE camera_id = ?";
-	private static final String ADD_CAMERA_MODEL_TO_DATABASE = 
-			"INSERT INTO cameras(model) VALUES(?);";
-	private static final String ADD_COMMENT_TO_DATABASE=
-			"INSERT into comments(text,post_id,user_id) values (?,?,?);";
-	private static final String GET_ALL_COMMENTS_FROM_DATABASE=
-			"SELECT text,username FROM comments c JOIN users u on c.user_id=u.user_id WHERE post_id=?";
+	private static final String ADD_IMAGE_CHARACTERISTICS_TO_DATABASE = "INSERT INTO image_characteristics(focal_length, f_number, exposure_time, iso_speed_ratings, date_taken, camera_id) VALUES(?,?,?,?,?,?);";
+	private static final String ADD_POST_TO_DATABASE = "INSERT INTO posts(image_url, title, description, nsfw, image_characteristics_id) VALUES(?,?,?,?,?);";
+	private static final String DELETE_CAMERA_FROM_DATABASE = "DELETE FROM cameras WHERE camera_id = ?";
+	private static final String ADD_CAMERA_MODEL_TO_DATABASE = "INSERT INTO cameras(model) VALUES(?);";
+	private static final String ADD_LOCATION_TO_DATABASAE = "INSERT INTO locations(city, country) VALUES(?,?);";
+	private static final String POST_DATA = "SELECT p.image_url, p.description, p.nsfw, p.title, ";
+	private static final String LOCATION_DATA = "l.city, l.country, ";
+	private static final String IMAGE_CHARACTERISTICS_DATA = "i.date_taken, i.exposure_time, i.f_number, i.focal_length, i.iso_speed_ratings, ";
+	private static final String GET_ALL_USER_UPLOADS = POST_DATA + LOCATION_DATA + IMAGE_CHARACTERISTICS_DATA
+			+ "c.model " + "FROM POSTS p " + "JOIN locations l ON l.location_id = p.location_id "
+			+ "JOIN image_characteristics i ON p.image_characteristics_id = i.image_characteristics_id "
+			+ "JOIN cameras c ON c.camera_id = i.camera_id " + "WHERE p.user_id = ?;";
+	private static final String ADD_COMMENT_TO_DATABASE = "INSERT into comments(text,post_id,user_id) values (?,?,?);";
+	private static final String GET_ALL_COMMENTS_FROM_DATABASE = "SELECT text,username FROM comments c JOIN users u on c.user_id=u.user_id WHERE post_id=?";
+
 	private static PostDAO instance;
 	private Connection connection;
-
+	
 	private PostDAO() {
 		try {
 			connection = DBConnection.getInstance().getConnection();
@@ -47,139 +49,161 @@ public class PostDAO {
 		}
 		return instance;
 	}
-	
+
 	private int addCameraModel(String model) {
 		try {
-			PreparedStatement addCameraModelStatement = 
-					connection.prepareStatement(ADD_CAMERA_MODEL_TO_DATABASE, PreparedStatement.RETURN_GENERATED_KEYS);
-			
+			PreparedStatement addCameraModelStatement = connection.prepareStatement(ADD_CAMERA_MODEL_TO_DATABASE,
+					PreparedStatement.RETURN_GENERATED_KEYS);
+
 			addCameraModelStatement.setString(1, model);
-			
+
 			addCameraModelStatement.executeUpdate();
-			
-			ResultSet keys = addCameraModelStatement.getGeneratedKeys();
-			if (keys.next()) {
-				return keys.getInt(KEY_COLUMN_ID);
-			}
+
+			return getLastIdFromStatement(addCameraModelStatement);
 		} catch (SQLException e) {
 			System.out.println("--addCameraModel-- SQL syntax error");
 		}
 		return INVALID_ID;
 	}
-	
-	//fix method for adding camera
+
+	// fix method for adding camera
 	private int addImageCharacteristics(String model, ImageCharacteristics imageCharacteristics) {
 		int cameraId = addCameraModel(model);
-		
+
 		if (cameraId == INVALID_ID) {
 			return INVALID_ID;
 		}
-		
+
 		String focalLength = imageCharacteristics.getFocalLength();
 		String fNumber = imageCharacteristics.getfNumber();
 		String exposureTime = imageCharacteristics.getExposureTime();
 		String isoSpeedRatings = imageCharacteristics.getIsoSpeedRatings();
 		String dateTaken = imageCharacteristics.getDateTaken();
-		
+
 		try {
-			PreparedStatement addImageCharacteristicsStatement = 
-					connection.prepareStatement(ADD_IMAGE_CHARACTERISTICS_TO_DATABASE, PreparedStatement.RETURN_GENERATED_KEYS);
-			
+			PreparedStatement addImageCharacteristicsStatement = connection
+					.prepareStatement(ADD_IMAGE_CHARACTERISTICS_TO_DATABASE, PreparedStatement.RETURN_GENERATED_KEYS);
+
 			addImageCharacteristicsStatement.setString(1, focalLength);
 			addImageCharacteristicsStatement.setString(2, fNumber);
 			addImageCharacteristicsStatement.setString(3, exposureTime);
 			addImageCharacteristicsStatement.setString(4, isoSpeedRatings);
 			addImageCharacteristicsStatement.setString(5, dateTaken);
 			addImageCharacteristicsStatement.setInt(6, cameraId);
-			
+
 			addImageCharacteristicsStatement.executeUpdate();
-			
-			ResultSet keys = addImageCharacteristicsStatement.getGeneratedKeys();
-			if (keys.next()) {
-				return keys.getInt(KEY_COLUMN_ID);
-			}
-	
-			
+
+			return getLastIdFromStatement(addImageCharacteristicsStatement);
+
 		} catch (SQLException e) {
 			System.out.println("--addImageCharacteristics-- SQL syntax error");
-			
+
 			deleteCameraModelFromDatabaseById(cameraId);
-			
+
 		}
 		return INVALID_ID;
 	}
-	
-	public boolean addPost(String imageURL, String title, String description, PostCategory category,
-						String city, String country, boolean isNsfw) {
-		Post post = new Post.Builder(imageURL)
-				.title(title)
-				.description(description)
-				.category(category)
-				.location(city, country)
-				.nsfw(isNsfw)
-				.build();		
-				
+
+	private int addLocation(String city, String country) {
+		try {
+			PreparedStatement addLocationStatement = connection.prepareStatement(ADD_LOCATION_TO_DATABASAE,
+					PreparedStatement.RETURN_GENERATED_KEYS);
+			addLocationStatement.setString(1, city);
+			addLocationStatement.setString(2, country);
+
+			addLocationStatement.executeUpdate();
+
+			return getLastIdFromStatement(addLocationStatement);
+
+		} catch (SQLException e) {
+			System.out.println("--addLocation-- SQL syntax error");
+		}
+		return INVALID_ID;
+	}
+
+	public int uploadPostToUser(int userId, String imageURL, String title, String description, PostCategory category,
+			String city, String country, boolean isNsfw) {
+
+		int locationId = addLocation(city, country);
+
+		if (locationId == INVALID_ID) {
+			return INVALID_ID;
+		}
+		Post post = new Post.Builder(imageURL).title(title).description(description).category(category)
+				.location(city, country).nsfw(isNsfw).build();
+
 		String cameraModel = post.getCameraModel();
 		ImageCharacteristics imageCharacteristics = post.getImageCharacteristics();
-		
+
 		int imageCharacteristicsId = addImageCharacteristics(cameraModel, imageCharacteristics);
-		
+
 		if (imageCharacteristicsId == INVALID_ID) {
-			return false;
+			return INVALID_ID;
 		}
-		
+
 		try {
-			PreparedStatement addPostStatement = 
-					connection.prepareStatement(ADD_POST_TO_DATABASE);
-		
+			PreparedStatement addPostStatement = connection.prepareStatement(ADD_POST_TO_DATABASE,
+					PreparedStatement.RETURN_GENERATED_KEYS);
+
 			addPostStatement.setString(1, imageURL);
 			addPostStatement.setString(2, title);
 			addPostStatement.setString(3, description);
 			addPostStatement.setString(4, (isNsfw ? "T" : "F"));
 			addPostStatement.setInt(5, imageCharacteristicsId);
-			
+			addPostStatement.setInt(6, locationId);
+			addPostStatement.setInt(7, userId);
+
 			addPostStatement.executeUpdate();
-			
-			return true;
+
+			return getLastIdFromStatement(addPostStatement);
+
 		} catch (SQLException e) {
 			System.out.println("--addPost-- SQL syntax error");
 			deleteImageCharacteristicsFromDatabaseById(imageCharacteristicsId);
 		}
-		return false;
+		return INVALID_ID;
 	}
 	
+	private int getLastIdFromStatement(PreparedStatement preparedStatement) throws SQLException {
+		ResultSet keys = preparedStatement.getGeneratedKeys();
+		if (keys.next()) {
+			return keys.getInt(KEY_COLUMN_ID);
+		}
+		return INVALID_ID;
+	}
+
 	private boolean deleteCameraModelFromDatabaseById(int cameraId) {
 		PreparedStatement deleteCameraStatement;
 		try {
 			deleteCameraStatement = connection.prepareStatement(DELETE_CAMERA_FROM_DATABASE);
-			
+
 			deleteCameraStatement.setInt(1, cameraId);
-			
+
 			deleteCameraStatement.executeUpdate();
-			
+
 			return true;
 		} catch (SQLException e1) {
 			System.out.println("--deleting camera-- SQL syntax error");
 		}
 		return false;
 	}
-	
+
 	private boolean deleteImageCharacteristicsFromDatabaseById(int imageCharacteristicsId) {
 		try {
-			PreparedStatement getCameraId = 
-					connection.prepareStatement("select camera_id from image_characteristics where image_characteristics_id = ?;");
-		
+			PreparedStatement getCameraId = connection.prepareStatement(
+					"select camera_id from image_characteristics where image_characteristics_id = ?;");
+
 			getCameraId.setInt(1, imageCharacteristicsId);
-			
+
 			ResultSet set = getCameraId.executeQuery();
 			if (set.next()) {
 				int cameraId = set.getInt(1);
-				
-				PreparedStatement st = 
-						connection.prepareStatement("DELETE FROM image_characteristics where image_characteristics_id = ?;");
+
+				PreparedStatement st = connection
+						.prepareStatement("DELETE FROM image_characteristics where image_characteristics_id = ?;");
 				st.setInt(1, imageCharacteristicsId);
 				st.executeUpdate();
-				
+
 				deleteCameraModelFromDatabaseById(cameraId);
 			}
 		} catch (SQLException e) {
@@ -188,36 +212,73 @@ public class PostDAO {
 		return false;
 	}
 	
-	public boolean addComment(int userID,int postID,String comment){
-		try{
-			PreparedStatement statement=connection.prepareStatement(ADD_COMMENT_TO_DATABASE);
+	public Collection<Post> getUserUploads(int userId) {
+		try {
+			PreparedStatement st = connection.prepareStatement(GET_ALL_USER_UPLOADS);
+			st.setInt(1, userId);
+			
+			ResultSet set = st.executeQuery();
+			
+			List<Post> userUploads = new ArrayList<>();
+			
+			while (set.next()) {
+				String imageURL = set.getString("image_url");
+				String title = set.getString("title");
+				String description = set.getString("description");
+				String city = set.getString("city");
+				String country = set.getString("country");
+				boolean nfsw = set.getString("nsfw") == "T";
+				
+				String dateTaken = set.getString("date_taken");
+				String exposureTime = set.getString("exposure_time");
+				String fNumber = set.getString("f_number");
+				String focalLength = set.getString("focal_length");
+				String isoSpeedRatings = set.getString("iso_speed_ratings");
+				String cameraModel = set.getString("model");
+				
+				Post post = new Post.Builder(imageURL)
+						.title(title)
+						.description(description)
+						.location(city, country)
+						.build();
+				
+			}
+			
+		} catch (SQLException e) {
+			System.out.println("--getUserUploads-- SQL syntax erro");
+			e.printStackTrace();
+		}
+		return new ArrayList<Post>();
+	}
+
+	public boolean addComment(int userID, int postID, String comment) {
+		try {
+			PreparedStatement statement = connection.prepareStatement(ADD_COMMENT_TO_DATABASE);
 			statement.setString(1, comment);
 			statement.setInt(2, postID);
 			statement.setInt(3, userID);
 			statement.executeUpdate();
 			return true;
-		}catch(SQLException e){
+		} catch (SQLException e) {
 			System.out.println("Something went wrong with the database while adding a comment");
 			return false;
 		}
 	}
-	
-	
-	
+
 	// FIX this
-	public List<Comment> getAllComments(int postID) throws PostException{
-		try{
-			PreparedStatement statement=connection.prepareStatement(GET_ALL_COMMENTS_FROM_DATABASE);
+	public List<Comment> getAllComments(int postID) throws PostException {
+		try {
+			PreparedStatement statement = connection.prepareStatement(GET_ALL_COMMENTS_FROM_DATABASE);
 			statement.setInt(1, postID);
 			statement.executeQuery();
 			ResultSet set = statement.executeQuery();
-			
+
 			List<Comment> comments = new ArrayList<>();
 			while (set.next()) {
-				comments.add(new Comment(set.getString("text"),set.getString("username")));				
+				comments.add(new Comment(set.getString("text"), set.getString("username")));
 			}
 			return comments;
-		}catch(SQLException e){
+		} catch (SQLException e) {
 			throw new PostException("Something went wrong with the database");
 		}
 	}
