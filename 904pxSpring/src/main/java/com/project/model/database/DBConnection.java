@@ -25,7 +25,7 @@ public final class DBConnection {
 		Class.forName("com.mysql.jdbc.Driver");
 		
 		loadConnectionProperties();
-
+		
 		 DB_HOST=dbProperties[0];
 		 DB_USER=dbProperties[1];
 		 DB_PASS=dbProperties[2];
