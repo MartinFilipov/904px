@@ -7,7 +7,7 @@
 <title>Profile Editor</title>
 </head>
 <body>
-<form action="./editor" method="post">
+<form action="editor" method="post">
 <input name='firstName' placeholder="Enter first name:"/> <br/>
 <input name='lastName' placeholder="Enter last name:"/><br/>
 <input name='profilePictureURL' placeholder="Enter profile picture URL:"/> <br/>

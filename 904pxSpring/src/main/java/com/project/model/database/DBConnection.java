@@ -2,8 +2,6 @@ package com.project.model.database;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -27,7 +25,7 @@ public final class DBConnection {
 		Class.forName("com.mysql.jdbc.Driver");
 
 		loadConnectionProperties();
-
+		
 		DB_HOST = dbProperties[0];
 		DB_USER = dbProperties[1];
 		DB_PASS = dbProperties[2];
@@ -35,6 +33,7 @@ public final class DBConnection {
 		DB_SCHEMA = dbProperties[4];
 		DB_OPTIONS = dbProperties[5];
 
+		System.out.println(DB_HOST +"\n"+DB_USER+"\n"+DB_PASS+"\n"+DB_PORT+"\n"+DB_SCHEMA+"\n"+DB_OPTIONS);
 		connection = DriverManager.getConnection(
 				String.format("jdbc:mysql://%s:%s/%s?%s", DB_HOST, DB_PORT, DB_SCHEMA, DB_OPTIONS), DB_USER, DB_PASS);
 
@@ -42,29 +41,34 @@ public final class DBConnection {
 
 	private void loadConnectionProperties() {
 		ClassLoader classLoader = getClass().getClassLoader();
+		System.out.println(classLoader.getResource("dbConnectionProperties"));
 		File file = new File(classLoader.getResource("dbConnectionProperties").getFile());
-		if (!file.exists()) {
-			try {
-				file.createNewFile();
-				PrintWriter wt = new PrintWriter(file);
-				wt.println("DB_HOST:localhost");
-				wt.println("DB_USER:root");
-				wt.println("DB_PASS:h3qb575fufgdb");
-				wt.println("DB_PORT:3306");
-				wt.println("DB_SCHEMA:904pxdb");
-				wt.println("DB_OPTIONS:autoReconnect=true&useSSL=false");
-			} catch (IOException e) {
-				System.out.println("Something went wrong");
-				return;
-			}
-		}
+//		File file=null;
 		System.out.println("The file exists: " + file.exists());
+//		if (!file.exists()) {
+//			try {
+//				System.out.println("Suzdavam file");
+//				file.createNewFile();
+//				PrintWriter wt = new PrintWriter(file);
+//				wt.println("DB_HOST:localhost");
+//				wt.println("DB_USER:root");
+//				wt.println("DB_PASS:h3qb575fufgdb");
+//				wt.println("DB_PORT:3306");
+//				wt.println("DB_SCHEMA:904pxdb");
+//				wt.println("DB_OPTIONS:autoReconnect=true&useSSL=false");
+//			} catch (IOException e) {
+//				System.out.println("Something went wrong");
+//				return;
+//			}
+//		}
+
 		try {
 			Scanner sc = new Scanner(file);
 			int index = 0;
 			while (sc.hasNextLine()) {
 				String line = sc.nextLine();
 				dbProperties[index++] = line.split(":")[1];
+				System.out.println(line.split(":")[1]);
 			}
 		} catch (FileNotFoundException e) {
 			System.out.println("File does not exist");

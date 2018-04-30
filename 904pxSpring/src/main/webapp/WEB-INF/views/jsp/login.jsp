@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
     pageEncoding="ISO-8859-1"%>
     <%@ page session="false" %>
+    <%@ taglib prefix = "c" uri = "http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 
 
@@ -64,8 +65,8 @@
             <li><a href="login">Log in</a></li>
             <li><a href="register">Register</a></li>
             <%}else{ %>
-            <li><a href="./profile">Profile</a></li>
-            <li><a href="./logout">Log out</a></li>
+            <li><a href="profile">Profile</a></li>
+            <li><a href="logout">Log out</a></li>
             <%} %>
       	</ul>
             </div>
