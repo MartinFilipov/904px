@@ -35,8 +35,10 @@ public class UserDAO implements IUserDAO {
 	}
 	
 	public static UserDAO getInstance() {
-		if (instance == null) {
-			instance = new UserDAO();
+		synchronized(UserDAO.class) {
+			if (instance == null) {
+				instance = new UserDAO();
+			}
 		}
 		return instance;
 	}
@@ -125,7 +127,9 @@ public class UserDAO implements IUserDAO {
 				&& (email != null && email.trim().length() < User.MIN_EMAIL_LENGTH)) {
 
 			try {
+				System.out.println(connection == null);
 				PreparedStatement st = connection.prepareStatement(ADD_USER_TO_DB);
+				System.out.println("text");
 				st.setString(1, username);
 				st.setString(2, password);
 				st.setString(3, email);
