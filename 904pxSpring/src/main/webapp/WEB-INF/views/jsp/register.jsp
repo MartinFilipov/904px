@@ -56,7 +56,7 @@
 
         <div class="col-sm-3 col-md-3 pull-right">
         <ul class="nav navbar-nav">
-        	<%if(request.getSession(false)==null || request.getSession(false).getAttribute("username")==null){ %>
+        	<%if(request.getSession(false)==null || request.getSession(false).getAttribute("user_id")==null){ %>
             <li><a href="login">Log in</a></li>
             <li><a href="register">Register</a></li>
             <%}else{ %>
@@ -98,7 +98,6 @@
 				<input type="password" class="lock" id="password2" name="confirm password" placeholder="Confirm Password" required="" />
 			</div>
 			<input type="submit" value="register now">
-			</a>
 		</form>
 	</div>
 
