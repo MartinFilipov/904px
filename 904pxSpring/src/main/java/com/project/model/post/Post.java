@@ -77,9 +77,9 @@ public class Post {
 			}
 		}
 
-		public Builder category(PostCategory category) {
+		public Builder category(String category) {
 			if (category != null) {
-				this.category = category.toString();
+				this.category = category;
 			}
 			return this;
 		}
@@ -147,7 +147,9 @@ public class Post {
 		}
 	}
 
-	public String getURL() {
+	
+
+	public String getImageURL() {
 		return imageURL;
 	}
 
@@ -163,12 +165,16 @@ public class Post {
 		return description;
 	}
 
-	public Location getLocation() {
-		return location;
+	public String getCategory() {
+		return category;
 	}
 
 	public String getCameraModel() {
 		return cameraModel;
+	}
+
+	public Location getLocation() {
+		return location;
 	}
 
 	public ImageCharacteristics getImageCharacteristics() {

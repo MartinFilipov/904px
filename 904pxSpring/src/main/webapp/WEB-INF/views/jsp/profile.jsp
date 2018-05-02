@@ -1,5 +1,11 @@
 <%@include file="header.jsp" %>
+<a href="./upload">
 <button id="upload" type="button" class="btn btn-secondary">Upload</button>
+</a>
+
+<a href="./uploaded">
+<button id="uploaded" type="button" class="btn btn-secondary">Uploaded</button>
+</a>
 
 <script src="./js/upload.js"></script>
 <div align="center" style="border:0px solid black">
