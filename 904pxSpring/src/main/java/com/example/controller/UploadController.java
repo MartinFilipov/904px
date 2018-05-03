@@ -79,24 +79,28 @@ public class UploadController {
 		
 		return "uploaded";
 	}
-	@RequestMapping(value="/post/{id}",method=RequestMethod.GET)
-	public String getComments(Model model,@PathVariable Integer id){
-		try {
-			List<Comment> comments=PostDAO.getInstance().getAllComments(id);
-			model.addAttribute("comments", comments);
-		} catch (PostException e) {
-			System.out.println("Something went wrong while getting comments.");
-		}
-		//Adjust return
-		return null;
-	}
-	@RequestMapping(value="/post/{id}",method=RequestMethod.GET)
+
+//	@RequestMapping(value="/post-details/{id}/test",method=RequestMethod.GET)
+//	public String getComments(Model model,@PathVariable Integer id){
+//		try {
+//			List<Comment> comments=PostDAO.getInstance().getAllComments(id);
+//			model.addAttribute("comments", comments);
+//		} catch (PostException e) {
+//			System.out.println("Something went wrong while getting comments.");
+//		}
+//		//Adjust return
+//		return "forward:/postDetails";
+//	}
+	@RequestMapping(value="/postDetails/{id}/addComment",method=RequestMethod.POST)
 	public String addComment(Model model,HttpServletRequest request,@PathVariable Integer id){
+		System.out.println("/n/n/n id: "+id+"/n/n");
 		int user_id=(int) request.getSession(false).getAttribute("user_id");
 //			String username=UserDAO.getInstance().getUsername(user_id);
 //			Comment comment=new Comment(, username);
-		PostDAO.getInstance().addComment(user_id, id, (String)request.getAttribute("text"));
+		PostDAO.getInstance().addComment(user_id, id, (String)request.getParameter("text"));
 		//Adjust return
-		return null;
+//		return  "forward:/postDetails/{id}";
+		return "forward:/postDetails/"+id;
 	}
+
 }
