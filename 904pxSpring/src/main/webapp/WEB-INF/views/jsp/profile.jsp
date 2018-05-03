@@ -40,7 +40,7 @@
 			<div class="gallery" title="Border" style="border: 1px dotted black;">
 				<h2>${album.name}</h2>
 				<a href="profile/album/${album.id}">
-					<h2>${album.name}link</h2>
+					<h2>${album.name}</h2>
 				</a>
 			</div>
 		</c:forEach>

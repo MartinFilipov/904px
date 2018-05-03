@@ -436,24 +436,24 @@ public class PostDAO {
 		}
 	}
 
-//	private void loadAllCategoriesToDatabase() {
-//		List<PostCategory> categories = PostDAO.getInstance().getAllCategories();
-//
-//		for (PostCategory cat : categories) {
-//			try {
-//				PreparedStatement st = connection.prepareStatement("INSERT INTO categories(category_name) VALUES(?);");
-//				st.setString(1, cat.toString());
-//				st.executeUpdate();
-//
-//			} catch (SQLException e) {
-//				System.out.println("Inserting failed");
-//			}
-//
-//		}
-//	}
-//
-//	public static void main(String[] args) {
-//		PostDAO.getInstance().loadAllCategoriesToDatabase();
-//	}
+	private void loadAllCategoriesToDatabase() {
+		List<PostCategory> categories = PostDAO.getInstance().getAllCategories();
+
+		for (PostCategory cat : categories) {
+			try {
+				PreparedStatement st = connection.prepareStatement("INSERT INTO categories(category_name) VALUES(?);");
+				st.setString(1, cat.toString());
+				st.executeUpdate();
+
+			} catch (SQLException e) {
+				System.out.println("Inserting failed");
+			}
+
+		}
+	}
+
+	public static void main(String[] args) {
+		PostDAO.getInstance().loadAllCategoriesToDatabase();
+	}
 
 }
