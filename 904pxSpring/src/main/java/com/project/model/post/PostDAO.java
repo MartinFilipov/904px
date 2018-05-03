@@ -30,12 +30,20 @@ public class PostDAO {
 	private static final String POST_DATA = "SELECT p.image_url, p.description, p.nsfw, p.title, ";
 	private static final String LOCATION_DATA = "l.city, l.country, ";
 	private static final String IMAGE_CHARACTERISTICS_DATA = "i.date_taken, i.exposure_time, i.f_number, i.focal_length, i.iso_speed_ratings, ";
-	private static final String GET_ALL_USER_UPLOADS = POST_DATA + LOCATION_DATA + IMAGE_CHARACTERISTICS_DATA
+//	private static final String GET_ALL_USER_UPLOADS = POST_DATA + LOCATION_DATA + IMAGE_CHARACTERISTICS_DATA
+//			+ "c.model, cat.category_name, p.post_id " + "FROM POSTS p " 
+//			+ "JOIN categories cat ON cat.category_id = p.category_id "
+//			+ "JOIN locations l ON l.location_id = p.location_id "
+//			+ "JOIN image_characteristics i ON p.image_characteristics_id = i.image_characteristics_id "
+//			+ "JOIN cameras c ON c.camera_id = i.camera_id " + "WHERE p.user_id = ?;";
+	private static final String GET_POST_BY_ID = POST_DATA + LOCATION_DATA + IMAGE_CHARACTERISTICS_DATA
 			+ "c.model, cat.category_name " + "FROM POSTS p " 
 			+ "JOIN categories cat ON cat.category_id = p.category_id "
 			+ "JOIN locations l ON l.location_id = p.location_id "
 			+ "JOIN image_characteristics i ON p.image_characteristics_id = i.image_characteristics_id "
-			+ "JOIN cameras c ON c.camera_id = i.camera_id " + "WHERE p.user_id = ?;";
+			+ "JOIN cameras c ON c.camera_id = i.camera_id " + "WHERE p.post_id = ?;";
+	private static final String GET_ALL_USER_UPLOAD_IDS = 
+			"SELECT p.post_id FROM posts p JOIN users u on p.user_id = u.user_id WHERE u.user_id = ?;";
 	private static final String ADD_COMMENT_TO_DATABASE = "INSERT into comments(text,post_id,user_id) values (?,?,?);";
 	private static final String GET_ALL_COMMENTS_FROM_DATABASE = "SELECT text,username FROM comments c JOIN users u on c.user_id=u.user_id WHERE post_id=?";
 	private static final int CAMERA_EXISTS = 1;
@@ -64,10 +72,10 @@ public class PostDAO {
 	
 	private int selectCameraModel(String model) {	
 		try {
-			PreparedStatement st = connection.prepareStatement(SELECT_CAMERA_MODEL_FROM_DATABASE);
-			st.setString(1, model);
+			PreparedStatement selectCameraModelStatement = connection.prepareStatement(SELECT_CAMERA_MODEL_FROM_DATABASE);
+			selectCameraModelStatement.setString(1, model);
 			
-			ResultSet set = st.executeQuery();
+			ResultSet set = selectCameraModelStatement.executeQuery();
 			
 			if (set.next()) {
 				return set.getInt(KEY_COLUMN_ID);
@@ -294,16 +302,14 @@ public class PostDAO {
 		return false;
 	}
 	
-	public Collection<Post> getUserUploads(int userId) {
+	public Post getPostById(int id) throws PostException {
 		try {
-			PreparedStatement getUserUploadsStatement = connection.prepareStatement(GET_ALL_USER_UPLOADS);
-			getUserUploadsStatement.setInt(1, userId);
+			PreparedStatement st = connection.prepareStatement(GET_POST_BY_ID);
+			st.setInt(1, id);
 			
-			ResultSet set = getUserUploadsStatement.executeQuery();
+			ResultSet set = st.executeQuery();
 			
-			List<Post> userUploads = new ArrayList<>();
-			
-			while (set.next()) {
+			if (set.next()) {
 				String imageURL = set.getString("image_url");
 				String title = set.getString("title");
 				String description = set.getString("description");
@@ -322,9 +328,66 @@ public class PostDAO {
 				Post post = new Post.Builder(imageURL)
 						.title(title)
 						.category(category)
+						.id(id)
 						.description(description)
 						.location(city, country)
 						.build();
+				
+				return post;
+			} else {
+				throw new PostException("No such post");
+			}
+			
+		} catch (SQLException e) {
+			System.out.println("--getPostById-- SQL syntax error");
+			e.printStackTrace();
+		}
+		
+		return new Post.Builder("").build();
+	}
+	
+	public Collection<Post> getUserUploads(int userId) {
+		try {
+			PreparedStatement getUserUploadsStatement = 
+					connection.prepareStatement(GET_ALL_USER_UPLOAD_IDS);
+			getUserUploadsStatement.setInt(1, userId);
+			
+			ResultSet set = getUserUploadsStatement.executeQuery();
+			
+			List<Post> userUploads = new ArrayList<>();
+			
+			while (set.next()) {
+				int postId = set.getInt("post_id");
+//				String imageURL = set.getString("image_url");
+//				String title = set.getString("title");
+//				String description = set.getString("description");
+//				String category = set.getString("category_name");
+//				String city = set.getString("city");
+//				String country = set.getString("country");
+//				boolean nfsw = set.getString("nsfw") == "T";
+//				
+//				String dateTaken = set.getString("date_taken");
+//				String exposureTime = set.getString("exposure_time");
+//				String fNumber = set.getString("f_number");
+//				String focalLength = set.getString("focal_length");
+//				String isoSpeedRatings = set.getString("iso_speed_ratings");
+//				String cameraModel = set.getString("model");
+//				
+//				Post post = new Post.Builder(imageURL)
+//						.title(title)
+//						.category(category)
+//						.id(postId)
+//						.description(description)
+//						.location(city, country)
+//						.build();
+				
+				Post post;
+				try {
+					post = getPostById(postId);
+				} catch (PostException e) {
+					System.out.println("Could not get post");
+					return new ArrayList<Post>();
+				}
 				
 				userUploads.add(post);
 				

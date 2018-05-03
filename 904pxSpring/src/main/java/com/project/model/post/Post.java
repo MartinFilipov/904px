@@ -20,6 +20,7 @@ public class Post {
 	private static final int CAMERA_ISO_SPEED_RATINGS_DESCRIPTION_ID = 34855;
 	private static final int CAMERA_DATE_TAKEN_DESCRIPTION_ID = 36867;
 
+	private int id;
 	private final String imageURL;
 	private boolean nsfw;
 	private String title;
@@ -39,6 +40,7 @@ public class Post {
 		this.cameraModel = builder.cameraModel;
 		this.location = builder.location;
 		this.imageCharacteristics = builder.imageCharacteristics;
+		this.id = builder.id;
 //		this.comments = new ArrayList<Comment>();
 	}
 
@@ -59,6 +61,7 @@ public class Post {
 	public static class Builder {
 		private final String imageURL;
 
+		private int id = 0;
 		private String title = "";
 		private String cameraModel = "";
 		private String category = "";
@@ -75,6 +78,13 @@ public class Post {
 				System.out.println("Error extracting data from image");
 				this.imageCharacteristics = new ImageCharacteristics("", "", "", "", "");
 			}
+		}
+		
+		public Builder id(int id) {
+			if (id > 0) {
+				this.id = id;
+			}
+			return this;
 		}
 
 		public Builder category(String category) {
@@ -148,6 +158,10 @@ public class Post {
 	}
 
 	
+
+	public int getId() {
+		return id;
+	}
 
 	public String getImageURL() {
 		return imageURL;
