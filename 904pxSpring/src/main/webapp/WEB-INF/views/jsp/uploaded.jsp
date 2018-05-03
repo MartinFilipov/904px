@@ -22,6 +22,9 @@
 	    <h2>Iso Speed Ratings: "${upload.imageCharacteristics.isoSpeedRatings}"</h2>
 	    <h2>Date Taken: "${upload.imageCharacteristics.dateTaken}"</h2>
     </div>
+    <div border="2px solid red">
+    <h3>Comments:</h3>
+    </div>
 </div>
 </c:forEach>
 
