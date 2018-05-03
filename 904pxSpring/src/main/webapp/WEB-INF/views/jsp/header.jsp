@@ -48,7 +48,7 @@ div.desc {
 			<span class="icon-bar"></span> <span class="icon-bar"></span> <span
 				class="icon-bar"></span>
 		</button>
-		<a class="navbar-brand" href="./"><b>904<sup>px</sup></b></a>
+		<a class="navbar-brand" href="/904px/"><b>904<sup>px</sup></b></a>
 	</div>
 	<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 		<ul class="nav navbar-nav">
