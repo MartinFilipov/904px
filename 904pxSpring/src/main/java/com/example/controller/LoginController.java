@@ -27,9 +27,8 @@ public class LoginController {
 		String password=request.getParameter("pass");
 		
 		UserDAO dao= UserDAO.getInstance();
-		int id=0;
 		try {
-			id=dao.login(username, password);
+			int id=dao.login(username, password);
 		  	HttpSession session=request.getSession();
 			session.setAttribute("user_id", id);
 			session.setMaxInactiveInterval(1000);

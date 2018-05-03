@@ -6,12 +6,16 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.project.model.post.Comment;
 import com.project.model.post.Post;
 import com.project.model.post.PostCategory;
 import com.project.model.post.PostDAO;
+import com.project.model.post.PostException;
+import com.project.model.user.UserDAO;
 
 @Controller
 public class UploadController {
@@ -75,4 +79,28 @@ public class UploadController {
 		
 		return "uploaded";
 	}
+
+//	@RequestMapping(value="/post-details/{id}/test",method=RequestMethod.GET)
+//	public String getComments(Model model,@PathVariable Integer id){
+//		try {
+//			List<Comment> comments=PostDAO.getInstance().getAllComments(id);
+//			model.addAttribute("comments", comments);
+//		} catch (PostException e) {
+//			System.out.println("Something went wrong while getting comments.");
+//		}
+//		//Adjust return
+//		return "forward:/postDetails";
+//	}
+	@RequestMapping(value="/postDetails/{id}/addComment",method=RequestMethod.POST)
+	public String addComment(Model model,HttpServletRequest request,@PathVariable Integer id){
+		System.out.println("/n/n/n id: "+id+"/n/n");
+		int user_id=(int) request.getSession(false).getAttribute("user_id");
+//			String username=UserDAO.getInstance().getUsername(user_id);
+//			Comment comment=new Comment(, username);
+		PostDAO.getInstance().addComment(user_id, id, (String)request.getParameter("text"));
+		//Adjust return
+//		return  "forward:/postDetails/{id}";
+		return "forward:/postDetails/"+id;
+	}
+
 }

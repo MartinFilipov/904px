@@ -2,14 +2,26 @@ package com.project.model.post;
 
 
 public class Comment {
+	private int id;
 	private String comment;
 //	private User user;
 	private String username;
+	private int likes;
 	
-	public Comment(String comment,String username){
+	public Comment(String comment,String username,int likes,int id){
 		setComment(comment);
+		setLikes(likes);
 //		setUser(user);
 		setUsername(username);
+		setId(id);
+	}
+
+	private void setId(int id) {
+		this.id=id;		
+	}
+	
+	private void setLikes(int likes) {
+		this.likes=likes;
 	}
 
 	private void setComment(String comment) {
@@ -46,5 +58,10 @@ public class Comment {
 	public String getComment() {
 		return comment;
 	}
-	
+	public int getLikes(){
+		return likes;
+	}
+	public int getId(){
+		return id;
+	}
 }

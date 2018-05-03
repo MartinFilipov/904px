@@ -8,10 +8,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
-<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
-<script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
-<script type="text/javascript" src="js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/904px/css/bootstrap.min.css" />
+<link rel="stylesheet" type="text/css" href="/904px/css/font-awesome.min.css" />
+<script type="text/javascript" src="/904px/js/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="/904px/js/bootstrap.min.js"></script>
 
 <style>
 div.gallery {
@@ -69,13 +69,13 @@ div.desc {
 				<%
 					if (request.getSession(false) == null || request.getSession(false).getAttribute("user_id") == null) {
 				%>
-				<li><a href="login">Log in</a></li>
-				<li><a href="register">Register</a></li>
+				<li><a href="/904px/login">Log in</a></li>
+				<li><a href="/904px/register">Register</a></li>
 				<%
 					} else {
 				%>
-				<li><a href="profile">Profile</a></li>
-				<li><a href="logout">Log out</a></li>
+				<li><a href="/904px/profile">Profile</a></li>
+				<li><a href="/904px/logout">Log out</a></li>
 				<%
 					}
 				%>

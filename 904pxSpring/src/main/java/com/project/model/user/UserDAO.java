@@ -11,6 +11,7 @@ import java.util.List;
 import com.project.model.database.DBConnection;
 import com.project.model.exceptions.UserException;
 import com.project.model.interfaces.IUserDAO;
+import com.project.model.post.Comment;
 
 
 public class UserDAO implements IUserDAO {
@@ -19,7 +20,8 @@ public class UserDAO implements IUserDAO {
 	private static final String GET_USERNAME_FROM_DB = "SELECT username from users WHERE user_id = ?;";
 	private static final String GET_USER_FROM_DB ="SELECT email,username,first_name,last_name,profile_picture,cover_photo,affection,photo_views FROM users WHERE user_id = ?;";				
 	private static final String UPDATE_USER_FROM_DB="UPDATE users set first_name=?,last_name=?,profile_picture=?,cover_photo=? where user_id=?;";
-	
+	private static final String ADD_ALBUM_TO_DB="INSERT INTO albums(user_id, name) VALUES (?,?);";
+	private static final String GET_ALL_ALBUMS_BY_ID="select name, album_id FROM albums WHERE user_id=?";
 	private static UserDAO instance;
 	private Connection connection;
 	
@@ -168,5 +170,29 @@ public class UserDAO implements IUserDAO {
 		}
 
 	}
-
+	public void addAlbum(int user_id,String name){
+		try {
+			PreparedStatement st = connection.prepareStatement(ADD_ALBUM_TO_DB);
+			st.setInt(1, user_id);
+			st.setString(2, name);
+			st.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("Something went wrong while creating album");
+		}
+	}
+	public List<Album> getAllAlbums(int user_id) throws UserException{
+		try {
+			PreparedStatement st = connection.prepareStatement(GET_ALL_ALBUMS_BY_ID);
+			st.setInt(1, user_id);
+			ResultSet set = st.executeQuery();
+			List<Album> albums=new ArrayList<>();
+			while (set.next()) {
+				albums.add(new Album(set.getString("name"), set.getInt("album_id")));
+			}
+			return albums;
+		} catch (SQLException e) {
+			throw new UserException("problem with getting albums from DB");
+		}
+		
+	}
 }
