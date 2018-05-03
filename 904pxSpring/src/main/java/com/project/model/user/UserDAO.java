@@ -11,20 +11,26 @@ import java.util.List;
 import com.project.model.database.DBConnection;
 import com.project.model.exceptions.UserException;
 import com.project.model.interfaces.IUserDAO;
-import com.project.model.post.Comment;
-
 
 public class UserDAO implements IUserDAO {
 	private static final String ADD_USER_TO_DB = "INSERT INTO users(username, password, email) VALUES (?,sha1(?),?);";
 	private static final String VALIDATE_USER = "SELECT user_id, username, password FROM users WHERE username = ? AND password = sha1(?);";
 	private static final String GET_USERNAME_FROM_DB = "SELECT username from users WHERE user_id = ?;";
-	private static final String GET_USER_FROM_DB ="SELECT email,username,first_name,last_name,profile_picture,cover_photo,affection,photo_views FROM users WHERE user_id = ?;";				
-	private static final String UPDATE_USER_FROM_DB="UPDATE users set first_name=?,last_name=?,profile_picture=?,cover_photo=? where user_id=?;";
-	private static final String ADD_ALBUM_TO_DB="INSERT INTO albums(user_id, name) VALUES (?,?);";
-	private static final String GET_ALL_ALBUMS_BY_ID="select name, album_id FROM albums WHERE user_id=?";
+	private static final String GET_USER_FROM_DB = "SELECT email,username,first_name,last_name,profile_picture,cover_photo,affection,photo_views FROM users WHERE user_id = ?;";
+	private static final String UPDATE_USER_FROM_DB = "UPDATE users set first_name=?,last_name=?,profile_picture=?,cover_photo=? where user_id=?;";
+	private static final String ADD_ALBUM_TO_DB = "INSERT INTO albums(user_id, name) VALUES (?,?);";
+	private static final String GET_ALL_ALBUMS_BY_ID = "select name, album_id FROM albums WHERE user_id=?";
+	private static final String ADD_POST_TO_ALBUM = "UPDATE posts set album_id=? where post_id=?;";
+	private static final String GET_ALL_POST_IDS_IN_ALBUM_BY_ALBUMID = "SELECT p.post_id FROM posts p JOIN albums a ON a.album_id=p.album_id WHERE a.album_id=?;";
+	private static final String GET_ALBUM_BY_ALBUM_ID = "SELECT album_id, name FROM albums WHERE album_id=?;";
+	private static final String CHECK_POST_IN_ALBUM = "select count(*) FROM posts p JOIN albums a ON a.album_id=p.album_id WHERE p.post_id=? AND a.album_id=?;";
+	private static final String GET_USER_FROM_DB_BY_USERNAME="SELECT email,first_name,last_name,profile_picture,cover_photo,affection,photo_views FROM users WHERE username = ?;";
+	private static final String GET_USER_ID_BY_USERNAME="SELECT user_id FROM users WHERE username=?;";
+	private static final String GET_FOLLOWED_USERS="SELECT user_id FROM users_has_followers WHERE follower_id=?;";
+	private static final String FOLLOW_USER="INSERT INTO users_has_followers (user_id,follower_id) VALUES(?,?)";
 	private static UserDAO instance;
 	private Connection connection;
-	
+
 	private UserDAO() {
 		try {
 			connection = DBConnection.getInstance().getConnection();
@@ -35,16 +41,16 @@ public class UserDAO implements IUserDAO {
 			System.out.println("Something went wrong with the databse");
 		}
 	}
-	
+
 	public static UserDAO getInstance() {
-		synchronized(UserDAO.class) {
+		synchronized (UserDAO.class) {
 			if (instance == null) {
 				instance = new UserDAO();
 			}
 		}
 		return instance;
 	}
-	
+
 	public String getUsername(int id) throws UserException {
 		try {
 			PreparedStatement statement = connection.prepareStatement(GET_USERNAME_FROM_DB);
@@ -59,46 +65,92 @@ public class UserDAO implements IUserDAO {
 			throw new UserException("Database is not working", e);
 		}
 	}
-	public boolean updateUser(int id,String firstName,String lastName,String profilePictureURL,String coverPhotoURL) throws UserException{
-		try{
-		PreparedStatement statement=connection.prepareStatement(UPDATE_USER_FROM_DB);
-		statement.setString(1, firstName);
-		statement.setString(2, lastName);
-		statement.setString(3, profilePictureURL);
-		statement.setString(4, coverPhotoURL);
-		statement.setInt(5, id);
-		statement.executeUpdate();
-		return true;
-		}catch(SQLException e){
-			throw new UserException("Database is not working",e);
+
+	public boolean updateUser(int id, String firstName, String lastName, String profilePictureURL, String coverPhotoURL)
+			throws UserException {
+		try {
+			PreparedStatement statement = connection.prepareStatement(UPDATE_USER_FROM_DB);
+			statement.setString(1, firstName);
+			statement.setString(2, lastName);
+			statement.setString(3, profilePictureURL);
+			statement.setString(4, coverPhotoURL);
+			statement.setInt(5, id);
+			statement.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			throw new UserException("Database is not working", e);
 		}
 	}
-	public User getUser(int id) throws UserException{
-		try{
-			PreparedStatement statement=connection.prepareStatement(GET_USER_FROM_DB);
+
+	
+	public int getUserIDByUsername(String username) throws UserException {
+		try {
+			PreparedStatement statement = connection.prepareStatement(GET_USER_ID_BY_USERNAME);
+			statement.setString(1, username);
+			ResultSet set = statement.executeQuery();
+			if (set.next()) {
+				return set.getInt("user_id");
+			} else {
+				throw new UserException("Wrong username");
+			}
+		} catch (SQLException e) {
+			throw new UserException("Database is not working", e);
+		}
+	}
+	
+	public User getUser(int id) throws UserException {
+		try {
+			PreparedStatement statement = connection.prepareStatement(GET_USER_FROM_DB);
 			statement.setInt(1, id);
-			ResultSet set=statement.executeQuery();
+			ResultSet set = statement.executeQuery();
 			User user;
-			//email,username,first_name,last_name,profile_picture,cover_photo,affection,photo_views
-			if(set.next()){
-				String email=set.getString("email");
-				String username=set.getString("username");
-				String firstName=set.getString("first_name");
-				String lastName=set.getString("last_name");
-				String profilePictureURL=set.getString("profile_picture");
-				String coverPhotoURL=set.getString("cover_photo");
-				int affection=set.getInt("affection");
-				int photo_views=set.getInt("photo_views");
-				user=new User(username,email,firstName,lastName,profilePictureURL,coverPhotoURL,affection,photo_views);
+			// email,username,first_name,last_name,profile_picture,cover_photo,affection,photo_views
+			if (set.next()) {
+				String email = set.getString("email");
+				String username = set.getString("username");
+				String firstName = set.getString("first_name");
+				String lastName = set.getString("last_name");
+				String profilePictureURL = set.getString("profile_picture");
+				String coverPhotoURL = set.getString("cover_photo");
+				int affection = set.getInt("affection");
+				int photo_views = set.getInt("photo_views");
+				user = new User(username, email, firstName, lastName, profilePictureURL, coverPhotoURL, affection,
+						photo_views);
 				return user;
-			}else{
+			} else {
 				throw new UserException("Wrong id");
 			}
-		}
-		catch(SQLException e){
-			throw new UserException("Database is not working",e);
+		} catch (SQLException e) {
+			throw new UserException("Database is not working", e);
 		}
 	}
+	
+	public User getUser(String username) throws UserException {
+		try {
+			PreparedStatement statement = connection.prepareStatement(GET_USER_FROM_DB_BY_USERNAME);
+			statement.setString(1, username);
+			ResultSet set = statement.executeQuery();
+			User user;
+			// email,username,first_name,last_name,profile_picture,cover_photo,affection,photo_views
+			if (set.next()) {
+				String email = set.getString("email");
+				String firstName = set.getString("first_name");
+				String lastName = set.getString("last_name");
+				String profilePictureURL = set.getString("profile_picture");
+				String coverPhotoURL = set.getString("cover_photo");
+				int affection = set.getInt("affection");
+				int photo_views = set.getInt("photo_views");
+				user = new User(username, email, firstName, lastName, profilePictureURL, coverPhotoURL, affection,
+						photo_views);
+				return user;
+			} else {
+				throw new UserException("Wrong id");
+			}
+		} catch (SQLException e) {
+			throw new UserException("Database is not working", e);
+		}
+	}
+
 	@Override
 	public int login(String username, String password) throws UserException {
 		try {
@@ -170,7 +222,8 @@ public class UserDAO implements IUserDAO {
 		}
 
 	}
-	public void addAlbum(int user_id,String name){
+
+	public void addAlbum(int user_id, String name) {
 		try {
 			PreparedStatement st = connection.prepareStatement(ADD_ALBUM_TO_DB);
 			st.setInt(1, user_id);
@@ -180,12 +233,13 @@ public class UserDAO implements IUserDAO {
 			System.out.println("Something went wrong while creating album");
 		}
 	}
-	public List<Album> getAllAlbums(int user_id) throws UserException{
+
+	public List<Album> getAllAlbums(int user_id) throws UserException {
 		try {
 			PreparedStatement st = connection.prepareStatement(GET_ALL_ALBUMS_BY_ID);
 			st.setInt(1, user_id);
 			ResultSet set = st.executeQuery();
-			List<Album> albums=new ArrayList<>();
+			List<Album> albums = new ArrayList<>();
 			while (set.next()) {
 				albums.add(new Album(set.getString("name"), set.getInt("album_id")));
 			}
@@ -193,6 +247,94 @@ public class UserDAO implements IUserDAO {
 		} catch (SQLException e) {
 			throw new UserException("problem with getting albums from DB");
 		}
-		
+	}
+
+	public void addPostToAlbum(int post_id, int album_id) {
+		try {
+			try {
+				if (albumContainsPost(album_id, post_id)) {
+					return;
+				}
+			} catch (UserException e) {
+				return;
+			}
+			PreparedStatement st = connection.prepareStatement(ADD_POST_TO_ALBUM);
+			st.setInt(1, album_id);
+			st.setInt(2, post_id);
+			st.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("Something went wrong while adding post to album");
+		}
+	}
+
+	public List<Integer> getAllPostIdsByAlbumID(int album_id) throws UserException {
+		try {
+			PreparedStatement st = connection.prepareStatement(GET_ALL_POST_IDS_IN_ALBUM_BY_ALBUMID);
+			st.setInt(1, album_id);
+			ResultSet set = st.executeQuery();
+			List<Integer> postIds = new ArrayList<>();
+			while (set.next()) {
+				postIds.add(set.getInt("post_id"));
+			}
+			return postIds;
+		} catch (SQLException e) {
+			throw new UserException("problem with getting album posts from DB");
+		}
+	}
+
+	public Album getAlbumByID(int album_id) throws UserException {
+		try {
+			PreparedStatement st = connection.prepareStatement(GET_ALBUM_BY_ALBUM_ID);
+			st.setInt(1, album_id);
+			ResultSet set = st.executeQuery();
+			if (set.next()) {
+				return new Album(set.getString("name"), set.getInt("album_id"));
+			} else {
+				throw new UserException("Couldn't get album by id");
+			}
+		} catch (SQLException e) {
+			throw new UserException("problem with getting album posts from DB");
+		}
+	}
+
+	public boolean albumContainsPost(int album_id, int post_id) throws UserException {
+		try {
+			PreparedStatement st = connection.prepareStatement(CHECK_POST_IN_ALBUM);
+			st.setInt(1, post_id);
+			st.setInt(2, album_id);
+			ResultSet set = st.executeQuery();
+			if (set.next()) {
+				return set.getInt("count(*)") > 0;
+			} else {
+				throw new UserException("problem with checking post contained in album");
+			}
+		} catch (SQLException e) {
+			throw new UserException("problem with checking post contained in album");
+		}
+	}
+	public void followUser(int user_id,int followed_id){
+		try {
+			PreparedStatement st = connection.prepareStatement(FOLLOW_USER);
+			st.setInt(1, followed_id);
+			st.setInt(2, user_id);
+			st.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("\nfollowUser-UserDAO\nCouldn't follow user\n");
+			return;
+		}		
+	}
+	public List<Integer> getUserIdsOfFollowedUsers(int user_id){
+		List<Integer> followedUserIds = new ArrayList<>();
+		try{
+			PreparedStatement st = connection.prepareStatement(GET_FOLLOWED_USERS);
+			st.setInt(1, user_id);
+			ResultSet set=st.executeQuery();
+			while(set.next()){
+				followedUserIds.add(set.getInt("user_id"));
+			}
+		} catch (SQLException e) {
+			System.out.println("Couldn't get followed users");
+		}	
+		return followedUserIds;
 	}
 }

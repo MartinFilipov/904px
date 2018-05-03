@@ -35,23 +35,35 @@
 
 	<h1>Affection: ${affection }</h1>
 	<h1>Photo views: ${photoViews }</h1>
+	<div class="gallery" style="border: 0.5px dotted black">
+		<c:forEach var="album" items="${albums}">
+			<div class="gallery" title="Border" style="border: 1px dotted black;">
+				<h2>${album.name}</h2>
+				<a href="profile/album/${album.id}">
+					<h2>${album.name}link</h2>
+				</a>
+			</div>
+		</c:forEach>
+	</div>
+	<div style="float: left;">
+		<form action="addAlbum" method="post">
+			<input name='albumName' placeholder="Enter album name:" />
+			<button>Add new album</button>
+		</form>
+	</div>
 	<a
 		href="https://78.media.tumblr.com/da495430333543385b6301b2e1883a46/tumblr_mpe54zOcNi1qdlh1io1_250.gif">
 		<button>Gratz</button>
-	</a>
-	<c:forEach var="album" items="${albums}">
-		<div class="gallery" title="Border" style="border: 1px dotted black;">
-			<h2>${album.name}</h2>
-				<a href="profile/album/${album.id}"> 
-				<h2>${album.name} link</h2>
-				</a>
-		</div>
-	</c:forEach>
-	<form action="addAlbum" method="post">
-		<input name='albumName' placeholder="Enter album name:" />
-		<button>Add new album</button>
-	</form>
-	<a href="editProfile"><button>Edit profile</button></a>
+	</a> <a href="editProfile"><button>Edit profile</button></a>
+
+	<div class="gallery" title="Border" style="border: 1px dotted black;">
+		<c:forEach var="followedName" items="${followed}">
+			<a href="/904px/profile/${followedName}">
+			<h3>${followedName }</h3>
+			</a>
+		</c:forEach>
+	</div>
+
 </div>
 </body>
 </html>

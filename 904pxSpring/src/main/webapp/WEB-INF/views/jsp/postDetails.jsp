@@ -24,7 +24,9 @@
 	<h3>Comments:</h3>
 	<c:forEach var="comment" items="${comments}">
 		<div title="Border" style="border: 1px dotted black;">
+			<a href="/904px/profile/${comment.username}">
 			<h4>${comment.username}</h4>
+			</a>
 			<p>${comment.comment }</p>
 			<p>Likes:${comment.likes}</p>
 			<a href="/904px/postDetails/${post.id}/${comment.id}">
@@ -41,7 +43,7 @@
 	<h3>Add to album</h3>
 	<ul>
 		<c:forEach var="album" items="${albums}">
-			<a href="/904px/profile/album/${album.id}">
+			<a href="/904px/profile/album/${album.id}/add/${post.id}">
 				<li>${album.name}</li>
 			</a>
 		</c:forEach>
