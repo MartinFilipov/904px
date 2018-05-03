@@ -1,7 +1,5 @@
 <%@include file="header.jsp"%>
 
-<h2>${context-path}</h2>
-
 <div class="gallery">
 	<img src="${post.imageURL}" width="300" height="200">
 

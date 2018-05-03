@@ -26,7 +26,6 @@ public class PostController {
 		try {
 			Post post = dao.getPostById(id);
 			model.addAttribute("post", post);
-			model.addAttribute("context-path", request.getContextPath());
 			
 			return "postDetails";
 		} catch (PostException e) {
