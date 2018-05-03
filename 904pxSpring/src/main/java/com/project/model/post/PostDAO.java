@@ -1,9 +1,11 @@
 package com.project.model.post;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,11 +22,11 @@ public class PostDAO {
 	private static final String SELECT_CAMERA_MODEL_FROM_DATABASE = "SELECT camera_id FROM cameras WHERE model=?";
 	private static final String CHECK_FOR_CAMERA_MODEL_IN_DATABASE = "SELECT COUNT(*) FROM cameras WHERE model = ?;";
 	private static final String ADD_IMAGE_CHARACTERISTICS_TO_DATABASE = "INSERT INTO image_characteristics(focal_length, f_number, exposure_time, iso_speed_ratings, date_taken, camera_id) VALUES(?,?,?,?,?,?);";
-	private static final String ADD_POST_TO_DATABASE = "INSERT INTO posts(image_url, title, description, nsfw, image_characteristics_id, location_id, user_id, category_id) VALUES(?,?,?,?,?,?,?,?);";
+	private static final String ADD_POST_TO_DATABASE = "INSERT INTO posts(image_url, title, description, nsfw, image_characteristics_id, location_id, user_id, category_id, date_uploaded) VALUES(?,?,?,?,?,?,?,?,?);";
 	private static final String DELETE_CAMERA_FROM_DATABASE = "DELETE FROM cameras WHERE camera_id = ?";
 	private static final String ADD_CAMERA_MODEL_TO_DATABASE = "INSERT INTO cameras(model) VALUES(?);";
 	private static final String ADD_LOCATION_TO_DATABASAE = "INSERT INTO locations(city, country) VALUES(?,?);";
-	private static final String POST_DATA = "SELECT p.image_url, p.description, p.nsfw, p.title, ";
+	private static final String POST_DATA = "SELECT p.image_url, p.description, p.nsfw, p.title, p.likes, p.views, p.date_uploaded, ";
 	private static final String LOCATION_DATA = "l.city, l.country, ";
 	private static final String IMAGE_CHARACTERISTICS_DATA = "i.date_taken, i.exposure_time, i.f_number, i.focal_length, i.iso_speed_ratings, ";
 	private static final String GET_POST_BY_ID = POST_DATA + LOCATION_DATA + IMAGE_CHARACTERISTICS_DATA
@@ -36,7 +38,8 @@ public class PostDAO {
 	private static final String GET_ALL_USER_UPLOAD_IDS = "SELECT p.post_id FROM posts p JOIN users u on p.user_id = u.user_id WHERE u.user_id = ?;";
 	private static final String ADD_COMMENT_TO_DATABASE = "INSERT into comments(comment,post_id,user_id,likes) values (?,?,?,0);";
 	private static final String GET_ALL_COMMENTS_FROM_DATABASE = "SELECT comment,username,likes,comment_id FROM comments c JOIN users u on c.user_id=u.user_id WHERE post_id=? ORDER BY likes DESC";
-	private static final String INCREASE_LIKES_OF_COMMENT_BY_COMMENT_ID="UPDATE comments SET likes=likes+1 WHERE comment_id=?;";
+	private static final String INCREASE_LIKES_OF_COMMENT_BY_COMMENT_ID = "UPDATE comments SET likes=likes+1 WHERE comment_id=?;";
+	private static final String INCREMENT_POST_VIEWS_BY_ID = "UPDATE posts SET views = views + 1 WHERE post_id = ?";
 	private static final int CAMERA_EXISTS = 1;
 	private static PostDAO instance;
 	private Connection connection;
@@ -229,6 +232,7 @@ public class PostDAO {
 			addPostStatement.setInt(6, locationId);
 			addPostStatement.setInt(7, userId);
 			addPostStatement.setInt(8, categoryId);
+			addPostStatement.setDate(9, Date.valueOf(LocalDate.now()));
 
 			addPostStatement.executeUpdate();
 
@@ -305,7 +309,11 @@ public class PostDAO {
 				String category = set.getString("category_name");
 				String city = set.getString("city");
 				String country = set.getString("country");
-				boolean nfsw = set.getString("nsfw") == "T";
+				boolean nsfw = set.getString("nsfw").equals("T");
+				System.out.println("Not safe for work: " + nsfw);
+				int likes = set.getInt("likes");
+				int views = set.getInt("views");
+				LocalDate dateUploaded = set.getDate("date_uploaded").toLocalDate();
 
 				String dateTaken = set.getString("date_taken");
 				String exposureTime = set.getString("exposure_time");
@@ -314,8 +322,17 @@ public class PostDAO {
 				String isoSpeedRatings = set.getString("iso_speed_ratings");
 				String cameraModel = set.getString("model");
 
-				Post post = new Post.Builder(imageURL).title(title).category(category).id(id).description(description)
-						.location(city, country).build();
+				Post post = new Post.Builder(imageURL)
+						.title(title)
+						.category(category)
+						.id(id)
+						.description(description)
+						.location(city, country)
+						.nsfw(nsfw)
+						.likes(likes)
+						.views(views)
+						.dateUploaded(dateUploaded)
+						.build();
 
 				return post;
 			} else {
@@ -381,7 +398,6 @@ public class PostDAO {
 		}
 	}
 
-
 	public List<Comment> getAllComments(int postID) throws PostException {
 		try {
 			PreparedStatement statement = connection.prepareStatement(GET_ALL_COMMENTS_FROM_DATABASE);
@@ -389,7 +405,8 @@ public class PostDAO {
 			ResultSet set = statement.executeQuery();
 			List<Comment> comments = new ArrayList<>();
 			while (set.next()) {
-				comments.add(new Comment(set.getString("comment"), set.getString("username"),set.getInt("likes"),set.getInt("comment_id")));
+				comments.add(new Comment(set.getString("comment"), set.getString("username"), set.getInt("likes"),
+						set.getInt("comment_id")));
 			}
 			System.out.println("\n Zaqvkata mina");
 			return comments;
@@ -397,7 +414,19 @@ public class PostDAO {
 			throw new PostException("Something went wrong with the database");
 		}
 	}
-	public void increaseLikesByCommentID(int commentId){
+	
+	public void increasePostViewsById(int postId) {
+		try {
+			PreparedStatement st = connection.prepareStatement(INCREMENT_POST_VIEWS_BY_ID);
+			st.setInt(1, postId);
+			st.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("--increasePostViewsById-- SQL syntax error");
+		}
+		
+	}
+
+	public void increaseLikesByCommentID(int commentId) {
 		try {
 			PreparedStatement statement = connection.prepareStatement(INCREASE_LIKES_OF_COMMENT_BY_COMMENT_ID);
 			statement.setInt(1, commentId);
@@ -407,24 +436,24 @@ public class PostDAO {
 		}
 	}
 
-	private void loadAllCategoriesToDatabase() {
-	 List<PostCategory> categories = PostDAO.getInstance().getAllCategories();
-	
-	 for (PostCategory cat : categories) {
-	 try {
-	 PreparedStatement st = connection.prepareStatement("INSERT INTO categories(category_name) VALUES(?);");
-	 st.setString(1, cat.toString());
-	 st.executeUpdate();
-	
-	 } catch (SQLException e) {
-	 System.out.println("Inserting failed");
-	 }
-	
-	 }
-	 }
-
-	public static void main(String[] args) {
-		PostDAO.getInstance().loadAllCategoriesToDatabase();
-	}
+//	private void loadAllCategoriesToDatabase() {
+//		List<PostCategory> categories = PostDAO.getInstance().getAllCategories();
+//
+//		for (PostCategory cat : categories) {
+//			try {
+//				PreparedStatement st = connection.prepareStatement("INSERT INTO categories(category_name) VALUES(?);");
+//				st.setString(1, cat.toString());
+//				st.executeUpdate();
+//
+//			} catch (SQLException e) {
+//				System.out.println("Inserting failed");
+//			}
+//
+//		}
+//	}
+//
+//	public static void main(String[] args) {
+//		PostDAO.getInstance().loadAllCategoriesToDatabase();
+//	}
 
 }

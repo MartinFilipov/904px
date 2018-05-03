@@ -2,7 +2,7 @@ package com.project.model.post;
 
 import java.io.File;
 import java.io.IOException;
-
+import java.time.LocalDate;
 
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
@@ -29,6 +29,9 @@ public class Post {
 	private String cameraModel;
 	private Location location;
 	private ImageCharacteristics imageCharacteristics;
+	private int likes;
+	private LocalDate dateUploaded;
+	private int views;
 //	private List<Comment> comments;
 
 	private Post(Builder builder) {
@@ -41,6 +44,9 @@ public class Post {
 		this.location = builder.location;
 		this.imageCharacteristics = builder.imageCharacteristics;
 		this.id = builder.id;
+		this.likes = builder.likes;
+		this.dateUploaded = builder.dateUploaded;
+		this.views = builder.views;
 //		this.comments = new ArrayList<Comment>();
 	}
 
@@ -69,6 +75,9 @@ public class Post {
 		private String description = "";
 		private Location location = null;
 		private ImageCharacteristics imageCharacteristics = null;
+		private int likes = 0;
+		private LocalDate dateUploaded = LocalDate.now();
+		private int views = 0;
 
 		public Builder(String imageURL) {
 			this.imageURL = imageURL == null ? "" : imageURL;
@@ -78,6 +87,27 @@ public class Post {
 				System.out.println("Error extracting data from image");
 				this.imageCharacteristics = new ImageCharacteristics("", "", "", "", "");
 			}
+		}
+		
+		public Builder views(int views) {
+			if (views > 0) {
+				this.views = views;
+			}
+			return this;
+		}
+		
+		public Builder dateUploaded(LocalDate dateUploaded) {
+			if (dateUploaded != null) {
+				this.dateUploaded = dateUploaded;
+			}
+			return this;
+		}
+		
+		public Builder likes(int likes) {
+			if (likes > 0) {
+				this.likes = likes;
+			}
+			return this;
 		}
 		
 		public Builder id(int id) {
@@ -157,7 +187,17 @@ public class Post {
 		}
 	}
 
-	
+	public int getLikes() {
+		return likes;
+	}
+
+	public LocalDate getDateUploaded() {
+		return dateUploaded;
+	}
+
+	public int getViews() {
+		return views;
+	}
 
 	public int getId() {
 		return id;

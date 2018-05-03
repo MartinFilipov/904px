@@ -28,6 +28,7 @@ public class PostController {
 		}
 		System.out.println("\n\n Post COntroller servlet");
 		PostDAO dao = PostDAO.getInstance();
+		
 		try {
 			List<Album> albums=UserDAO.getInstance().getAllAlbums((int)request.getSession(false).getAttribute("user_id"));
 			model.addAttribute("albums",albums);
@@ -35,18 +36,23 @@ public class PostController {
 			System.out.println("Couldn't get albums in postDetails");
 		}
 		try {
+			dao.increasePostViewsById(id);
 			Post post = dao.getPostById(id);
 			model.addAttribute("post", post);
+
 			try{
 				List<Comment> comments = dao.getAllComments(id);
 				model.addAttribute("comments", comments);
 				System.out.println("\n Komentarite beha getnati");
 				System.out.println("\nComments: "+comments+"\n");
+				
 				return "postDetails";
 			}catch(PostException e){
 				System.out.println("\nSomething went wrong while getting the comments");
 			}
+			
 			return "postDetails";
+			
 		} catch (PostException e) {
 			System.out.println("Could not create post");
 		}
