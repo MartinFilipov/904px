@@ -27,7 +27,7 @@ import com.project.model.post.PostDAO;
 @Controller
 @MultipartConfig
 public class UploadController {
-	private static final String FILE_PATH = "D:\\Uploads\\";
+	private static final String FILE_PATH = "E:\\Uploads\\";
 	
 	@RequestMapping(value="/upload", method= {RequestMethod.GET, RequestMethod.POST})
 	public String loadPage(Model model, HttpServletRequest request) {
@@ -58,15 +58,17 @@ public class UploadController {
 		
 		try {
 			String fileName = file.getOriginalFilename();
-			
+			System.out.println("\n predi otvarqne na file");
 			File savedFile = new File(FILE_PATH + fileName);		
+			System.out.println("\n predi copy ");
 			Files.copy(file.getInputStream(), savedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			
 			System.out.println("File name in uploadImage controller ------------" + fileName);
 			model.addAttribute("filename", fileName);
 			return "forward:/upload";
 		} catch (IOException e) {
+			e.printStackTrace();
 			throw new PostException("Could not upload file", e);
+			
 		}
 	}
 	

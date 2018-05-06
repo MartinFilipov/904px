@@ -82,7 +82,7 @@ public class Post {
 		private LocalDate dateUploaded = LocalDate.now();
 		private int views = 0;
 
-		public Builder(String imageURL) {
+		public Builder(String imageURL) { 
 			this.imageURL = imageURL == null ? "" : imageURL;
 			try {
 				this.imageCharacteristics = initializeImageCharacteristics(imageURL);
@@ -178,7 +178,8 @@ public class Post {
 
 			if (directoryIFDO != null) {
 				model = directoryIFDO.getDescription(CAMERA_MODEL_DESCRIPTION_ID);
-				this.cameraModel = model;
+				if (model != null)
+					this.cameraModel = model;
 			}
 			if (directorySubIFD != null) {
 				focalLength = directorySubIFD.getDescription(CAMERA_FOCAL_LENTH_DESCRIPTION_ID);
@@ -186,7 +187,10 @@ public class Post {
 				exposureTime = directorySubIFD.getDescription(CAMERA_EXPOSURE_TIME_DESCRIPTION_ID);
 				isoSpeedRatings = directorySubIFD.getDescription(CAMERA_ISO_SPEED_RATINGS_DESCRIPTION_ID);
 				// returns only date
-				dateTaken = directorySubIFD.getDescription(CAMERA_DATE_TAKEN_DESCRIPTION_ID).split(" ")[0];
+				String fullDateTaken=directorySubIFD.getDescription(CAMERA_DATE_TAKEN_DESCRIPTION_ID);
+				if(fullDateTaken!=null){
+					dateTaken = fullDateTaken.split(" ")[0];
+				}
 			}
 
 			return new ImageCharacteristics(focalLength, fNumber, exposureTime, isoSpeedRatings, dateTaken);

@@ -217,6 +217,7 @@ public class PostDAO {
 				.location(city, country).nsfw(isNsfw).build();
 
 		String cameraModel = post.getCameraModel();
+		System.out.println("\ncamera model = " + cameraModel);
 		ImageCharacteristics imageCharacteristics = post.getImageCharacteristics();
 
 		int imageCharacteristicsId = addImageCharacteristics(cameraModel, imageCharacteristics);
