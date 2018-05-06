@@ -3,7 +3,7 @@
 <c:forEach var="post" items="${posts}">
 	<div class="gallery">
 		<a href="/904px/postDetails/${post.id}"> 
-		<img src="${post.imageURL}" width="300" height="200">
+		<img src="/904px/download/${post.imageName}" width="300" height="200">
 		</a>
 	</div>
 </c:forEach>

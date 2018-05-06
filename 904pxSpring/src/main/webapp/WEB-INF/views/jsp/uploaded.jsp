@@ -4,8 +4,8 @@
 
 <c:forEach var="upload" items="${uploads}">
 <div class="gallery">
-    <a href="postDetails/${upload.id}">
-    <img src="${upload.imageURL}" width="300" height="200">
+    <a href="/904px/postDetails/${upload.id}">
+    <img src="/904px/download/${upload.imageName}" width="300" height="200">
     </a>
 </div>
 </c:forEach>

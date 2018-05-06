@@ -32,10 +32,12 @@ public class Post {
 	private int likes;
 	private LocalDate dateUploaded;
 	private int views;
+	private String imageName;
 //	private List<Comment> comments;
 
 	private Post(Builder builder) {
 		this.imageURL = builder.imageURL;
+		this.imageName = builder.imageName;
 		this.nsfw = builder.nsfw;
 		this.title = builder.title;
 		this.description = builder.description;
@@ -66,7 +68,8 @@ public class Post {
 
 	public static class Builder {
 		private final String imageURL;
-
+		private String imageName = "";
+		
 		private int id = 0;
 		private String title = "";
 		private String cameraModel = "";
@@ -157,6 +160,9 @@ public class Post {
 		private ImageCharacteristics initializeImageCharacteristics(String imageURL)
 				throws ImageProcessingException, IOException {
 			File file = new File(imageURL);
+			if (file.exists()) {
+				this.imageName = file.getName();
+			}
 
 			Metadata metadata = ImageMetadataReader.readMetadata(file);
 
@@ -185,6 +191,12 @@ public class Post {
 
 			return new ImageCharacteristics(focalLength, fNumber, exposureTime, isoSpeedRatings, dateTaken);
 		}
+	}
+	
+	
+
+	public String getImageName() {
+		return imageName;
 	}
 
 	public int getLikes() {

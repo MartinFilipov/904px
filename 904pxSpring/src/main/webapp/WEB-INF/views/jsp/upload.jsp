@@ -1,7 +1,15 @@
 <%@include file="header.jsp" %>
 
-<form action=./upload method="post">
-	<input name='imageURL' placeholder="Enter image URL:"/><br/>
+<c:if test="${empty filename}">
+	<form action="/904px/uploadImage" method="post" enctype="multipart/form-data">
+		<input type="file" name='filename'/><br/>
+		<input type="submit" value="Next"/><br/>
+	</form>
+</c:if>
+
+<c:if test="${not empty filename}"> 
+<img src="/904px/download/${filename}" height="300px">
+<form action="/904px/upload/${filename}" method="post">
 	<input name='title' placeholder="Title:"/> <br/>
 	<input name='description' placeholder="Description"/><br/>
 	
@@ -21,7 +29,9 @@
 	</div>
 	<input type="checkbox" name="nsfw" value="nsfw"/> NSFW <br/>
 
-	<button>Upload</button>
+	<button> Upload </button>
 </form>
+
+</c:if>
 </body>
 </html>

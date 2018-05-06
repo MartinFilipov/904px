@@ -1,7 +1,7 @@
 <%@include file="header.jsp"%>
 
 <div class="gallery">
-	<img src="${post.imageURL}" width="300" height="200">
+	<img src="/904px/download/${post.imageName}" width="300" height="200">
 
 	<h2>Title: ${post.title}</h2>
 	<h2>Description: ${post.description}</h2>
