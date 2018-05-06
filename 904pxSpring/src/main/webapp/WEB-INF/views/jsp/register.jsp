@@ -43,7 +43,7 @@
         <ul class="nav navbar-nav">
             <!-- <li class="active"><a href="#">Popular</a></li>-->
             <li><a href="#">Popular</a></li>
-            <li><a href="#">Fresh</a></li>
+            <li><a href="/904px/fresh">Fresh</a></li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">More <b class="caret"></b></a>
                 <ul class="dropdown-menu">
@@ -56,13 +56,14 @@
 
         <div class="col-sm-3 col-md-3 pull-right">
         <ul class="nav navbar-nav">
-        	<%if(request.getSession(false)==null || request.getSession(false).getAttribute("user_id")==null){ %>
+        	<c:if test="${empty sessionScope.user_id}">
             <li><a href="login">Log in</a></li>
             <li><a href="register">Register</a></li>
-            <%}else{ %>
+            </c:if>
+            <c:if test="${!empty sessionScope.user_id}">
             <li><a href="profile">Profile</a></li>
             <li><a href="logout">Log out</a></li>
-            <%} %>
+            </c:if>
       	</ul>
             </div>
             <form class="navbar-form" role="search">

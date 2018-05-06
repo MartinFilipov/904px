@@ -11,6 +11,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.project.model.database.DBConnection;
 import com.project.model.imageCharacteristics.ImageCharacteristics;
@@ -40,6 +46,7 @@ public class PostDAO {
 	private static final String GET_ALL_COMMENTS_FROM_DATABASE = "SELECT comment,username,likes,comment_id FROM comments c JOIN users u on c.user_id=u.user_id WHERE post_id=? ORDER BY likes DESC";
 	private static final String INCREASE_LIKES_OF_COMMENT_BY_COMMENT_ID = "UPDATE comments SET likes=likes+1 WHERE comment_id=?;";
 	private static final String INCREMENT_POST_VIEWS_BY_ID = "UPDATE posts SET views = views + 1 WHERE post_id = ?";
+	private static final String GET_FRESH_POST_IDS = "SELECT post_id FROM posts ORDER BY post_id desc;";
 	private static final int CAMERA_EXISTS = 1;
 	private static PostDAO instance;
 	private Connection connection;
@@ -322,16 +329,8 @@ public class PostDAO {
 				String isoSpeedRatings = set.getString("iso_speed_ratings");
 				String cameraModel = set.getString("model");
 
-				Post post = new Post.Builder(imageURL)
-						.title(title)
-						.category(category)
-						.id(id)
-						.description(description)
-						.location(city, country)
-						.nsfw(nsfw)
-						.likes(likes)
-						.views(views)
-						.dateUploaded(dateUploaded)
+				Post post = new Post.Builder(imageURL).title(title).category(category).id(id).description(description)
+						.location(city, country).nsfw(nsfw).likes(likes).views(views).dateUploaded(dateUploaded)
 						.build();
 
 				return post;
@@ -414,7 +413,7 @@ public class PostDAO {
 			throw new PostException("Something went wrong with the database");
 		}
 	}
-	
+
 	public void increasePostViewsById(int postId) {
 		try {
 			PreparedStatement st = connection.prepareStatement(INCREMENT_POST_VIEWS_BY_ID);
@@ -423,7 +422,7 @@ public class PostDAO {
 		} catch (SQLException e) {
 			System.out.println("--increasePostViewsById-- SQL syntax error");
 		}
-		
+
 	}
 
 	public void increaseLikesByCommentID(int commentId) {
@@ -434,6 +433,20 @@ public class PostDAO {
 		} catch (SQLException e) {
 			System.out.println("Something went wrong while updating likes");
 		}
+	}
+
+	public List<Post> getFreshPosts() throws PostException {
+		List<Post> posts =new ArrayList<>();
+		try {
+			PreparedStatement statement = connection.prepareStatement(GET_FRESH_POST_IDS);
+			ResultSet set =statement.executeQuery();
+			while(set.next()){
+				posts.add(getPostById(set.getInt("post_id")));
+			}
+		} catch (SQLException e) {
+			System.out.println("Something went wrong while updating likes");
+		}
+		return posts;
 	}
 
 	private void loadAllCategoriesToDatabase() {
