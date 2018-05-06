@@ -12,12 +12,7 @@
 <input name='lastName' placeholder="Enter last name:"/><br/>
 <input name='profilePictureURL' placeholder="Enter profile picture URL:"/> <br/>
 <input name='coverPhotoURL' placeholder="Enter cover photo URL:"/><br/>
- <!-- 
-Select a profile picture: <br />
-<input type = "file" name = "profilePicture" size = "50" /><br/>
-Select a cover photo: <br />
-<input type = "file" name = "coverPhoto" size = "50" /><br/><br/><br/>
--->
+
 <button>Save changes</button>
 </form>
 </body>
