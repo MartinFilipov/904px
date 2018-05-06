@@ -151,12 +151,12 @@ public class ProfileController {
 	public String getUserProfile(HttpServletRequest request, Model model, @PathVariable(value = "username") String username) {
 		try {
 			UserDAO dao=UserDAO.getInstance();
-			if(username.equals(dao.getUsername((int)request.getSession(false).getAttribute("user_id")))){
+			if(request.getSession(false).getAttribute("user_id")!=null && username.equals(dao.getUsername((int)request.getSession(false).getAttribute("user_id")))){
 				return "forward:/profile";
 			}
 			User user=dao.getUser(username);
-			model.addAttribute("userID", dao.getUserIDByUsername(username));
-			model.addAttribute("userSessionID",request.getSession(false).getAttribute("user_id"));
+//			model.addAttribute("userID", dao.getUserIDByUsername(username));
+//			model.addAttribute("userSessionID",request.getSession(false).getAttribute("user_id"));
 			model.addAttribute("user", user);
 			List<Album> albums=dao.getAllAlbums(dao.getUserIDByUsername(username));
 			model.addAttribute("albums", albums);
@@ -168,9 +168,9 @@ public class ProfileController {
 	
 	@RequestMapping(value = "/profile/album/{id}", method = RequestMethod.GET)
 	public String getPostDetails(HttpServletRequest request, Model model, @PathVariable(value = "id") Integer albumId) {
-		if (request.getSession(false) == null) {
-			return "index";
-		}
+//		if (request.getSession(false) == null) {
+//			return "index";
+//		}
 		try {
 			List<Integer> postIds=UserDAO.getInstance().getAllPostIdsByAlbumID(albumId);
 			PostDAO dao=PostDAO.getInstance();

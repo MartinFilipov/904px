@@ -15,10 +15,10 @@
 		<h3>City: ${post.location.city}</h3>
 		<h3>Country: ${post.location.country}</h3>
 	</div>
-	<div> 
-    	<h2>Likes: ${post.likes} Views: ${post.views}</h2>
-    	<h2>Date uploaded: ${post.dateUploaded}</h2>
-    </div>
+	<div>
+		<h2>Likes: ${post.likes} Views: ${post.views}</h2>
+		<h2>Date uploaded: ${post.dateUploaded}</h2>
+	</div>
 	<div>
 		<h2>Image Characteristics</h2>
 		<h3>Focal Length: ${post.imageCharacteristics.focalLength}</h3>
@@ -32,29 +32,38 @@
 	<c:forEach var="comment" items="${comments}">
 		<div title="Border" style="border: 1px dotted black;">
 			<a href="/904px/profile/${comment.username}">
-			<h4>${comment.username}</h4>
+				<h4>${comment.username}</h4>
 			</a>
 			<p>${comment.comment }</p>
 			<p>Likes:${comment.likes}</p>
-			<a href="/904px/postDetails/${post.id}/${comment.id}">
-				<button>Like</button>
-			</a>
+
+			<c:if test="${!empty sessionScope.user_id}">
+				<a href="/904px/postDetails/${post.id}/${comment.id}">
+					<button>Like</button>
+				</a>
+			</c:if>
 		</div>
 	</c:forEach>
-	<form action="/904px/postDetails/${post.id}/addComment" method="post">
-		<input name='text' placeholder="Enter comment:" />
-		<button>Add comment</button>
-	</form>
+
+
+	<c:if test="${!empty sessionScope.user_id}">
+		<form action="/904px/postDetails/${post.id}/addComment" method="post">
+			<input name='text' placeholder="Enter comment:" />
+			<button>Add comment</button>
+		</form>
+	</c:if>
 </div>
-<div>
-	<h3>Add to album</h3>
-	<ul>
-		<c:forEach var="album" items="${albums}">
-			<a href="/904px/profile/album/${album.id}/add/${post.id}">
-				<li>${album.name}</li>
-			</a>
-		</c:forEach>
-	</ul>
-</div>
+<c:if test="${!empty sessionScope.user_id}">
+	<div>
+		<h3>Add to album</h3>
+		<ul>
+			<c:forEach var="album" items="${albums}">
+				<a href="/904px/profile/album/${album.id}/add/${post.id}">
+					<li>${album.name}</li>
+				</a>
+			</c:forEach>
+		</ul>
+	</div>
+</c:if>
 </body>
 </html>

@@ -2,11 +2,14 @@
 <h1>Welcome to ${user.username}'s profile</h1>
 
 <div align="center" style="border: 0px solid black">
-<c:if test='${userSessionID != userID}'>
-	<a href="/904px/profile/${user.username}/follow">
-	<button>Follow</button>
-	</a>
-</c:if>
+
+
+		<c:if test="${!empty sessionScope.user_id}">
+		<a href="/904px/profile/${user.username}/follow">
+			<button>Follow</button>
+		</a>
+		</c:if>
+
 	<c:if test="${user.firstName != ''}">
 		<c:if test="${ user.lastName!= ''}">
 			<h1>Name: ${user.firstName} ${user.lastName}</h1>
@@ -26,15 +29,15 @@
 		<h6>Cover photo url: ${user.coverPhotoURL }</h6>
 		<img src="${user.coverPhotoURL }" width="350">
 	</c:if>
-	
+
 </div>
-	<c:forEach var="album" items="${albums}">
-		<div class="gallery" title="Border" style="border: 1px dotted black;">
+<c:forEach var="album" items="${albums}">
+	<div class="gallery" title="Border" style="border: 1px dotted black;">
+		<h2>${album.name}</h2>
+		<a href="/904px/profile/album/${album.id}">
 			<h2>${album.name}</h2>
-				<a href="/904px/profile/album/${album.id}"> 
-				<h2>${album.name}</h2>
-				</a>
-		</div>
-	</c:forEach>
+		</a>
+	</div>
+</c:forEach>
 </body>
 </html>

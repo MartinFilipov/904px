@@ -1,9 +1,9 @@
 <%@include file="header.jsp"%>
-<a href="./upload">
+<a href="/904px/upload">
 	<button id="upload" type="button" class="btn btn-secondary">Upload</button>
 </a>
 
-<a href="./uploaded">
+<a href="/904px/uploaded">
 	<button id="uploaded" type="button" class="btn btn-secondary">Uploaded</button>
 </a>
 
@@ -39,14 +39,14 @@
 		<c:forEach var="album" items="${albums}">
 			<div class="gallery" title="Border" style="border: 1px dotted black;">
 				<h2>${album.name}</h2>
-				<a href="profile/album/${album.id}">
+				<a href="/904px/profile/album/${album.id}">
 					<h2>${album.name}</h2>
 				</a>
 			</div>
 		</c:forEach>
 	</div>
 	<div style="float: left;">
-		<form action="addAlbum" method="post">
+		<form action="/904px/addAlbum" method="post">
 			<input name='albumName' placeholder="Enter album name:" />
 			<button>Add new album</button>
 		</form>
@@ -54,7 +54,7 @@
 	<a
 		href="https://78.media.tumblr.com/da495430333543385b6301b2e1883a46/tumblr_mpe54zOcNi1qdlh1io1_250.gif">
 		<button>Gratz</button>
-	</a> <a href="editProfile"><button>Edit profile</button></a>
+	</a> <a href="/904px/editProfile"><button>Edit profile</button></a>
 
 	<div class="gallery" title="Border" style="border: 1px dotted black;">
 		<c:forEach var="followedName" items="${followed}">

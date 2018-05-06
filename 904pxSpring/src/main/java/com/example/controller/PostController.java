@@ -23,47 +23,62 @@ public class PostController {
 
 	@RequestMapping(value = "/postDetails/{id}", method = { RequestMethod.POST, RequestMethod.GET })
 	public String getPostDetails(HttpServletRequest request, Model model, @PathVariable Integer id) {
-		if (request.getSession(false) == null) {
-			return "index";
-		}
+		// if (request.getSession(false) == null) {
+		// return "index";
+		// }
 		System.out.println("\n\n Post COntroller servlet");
 		PostDAO dao = PostDAO.getInstance();
-		
-		try {
-			List<Album> albums=UserDAO.getInstance().getAllAlbums((int)request.getSession(false).getAttribute("user_id"));
-			model.addAttribute("albums",albums);
-		} catch (UserException e1) {
-			System.out.println("Couldn't get albums in postDetails");
+
+		if (request.getSession(false).getAttribute("user_id") != null) {
+			try {
+				List<Album> albums = UserDAO.getInstance()
+						.getAllAlbums((int) request.getSession(false).getAttribute("user_id"));
+				model.addAttribute("albums", albums);
+			} catch (UserException e1) {
+				System.out.println("Couldn't get albums in postDetails");
+			}
 		}
 		try {
 			dao.increasePostViewsById(id);
 			Post post = dao.getPostById(id);
 			model.addAttribute("post", post);
 
-			try{
+			try {
 				List<Comment> comments = dao.getAllComments(id);
 				model.addAttribute("comments", comments);
 				System.out.println("\n Komentarite beha getnati");
-				System.out.println("\nComments: "+comments+"\n");
-				
+				System.out.println("\nComments: " + comments + "\n");
+
 				return "postDetails";
-			}catch(PostException e){
+			} catch (PostException e) {
 				System.out.println("\nSomething went wrong while getting the comments");
 			}
-			
+
 			return "postDetails";
-			
+
 		} catch (PostException e) {
 			System.out.println("Could not create post");
 		}
 		return "pageNotFound";
 	}
-	@RequestMapping(value = "/postDetails/{postId}/{commentId}", method =RequestMethod.GET)
-	public String likeComment(HttpServletRequest request, Model model,
-			@PathVariable(value = "postId")Integer postId,
-			@PathVariable(value = "commentId") Integer commentId){
+
+	@RequestMapping(value = "/postDetails/{postId}/{commentId}", method = RequestMethod.GET)
+	public String likeComment(HttpServletRequest request, Model model, @PathVariable(value = "postId") Integer postId,
+			@PathVariable(value = "commentId") Integer commentId) {
 		System.out.println("\n\n Like comment");
 		PostDAO.getInstance().increaseLikesByCommentID(commentId);
-		return "forward:/postDetails/"+postId;
+		return "forward:/postDetails/" + postId;
+	}
+
+	@RequestMapping(value = "/fresh", method = RequestMethod.GET)
+	public String getFreshPage(HttpServletRequest request, Model model) {
+		try {
+			List<Post> posts = PostDAO.getInstance().getFreshPosts();
+			model.addAttribute("posts", posts);
+			return "fresh";
+		} catch (PostException e) {
+			System.out.println("Something went wrong while getting fresh posts");
+		}
+		return "pageNotFound";
 	}
 }

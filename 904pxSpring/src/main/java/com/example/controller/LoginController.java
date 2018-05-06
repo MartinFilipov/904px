@@ -3,6 +3,7 @@ package com.example.controller;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +14,7 @@ import com.project.model.user.UserDAO;
 
 
 //@RequestMapping(value="/login")
+//@Scope("session")
 @Controller
 public class LoginController {
 
@@ -32,6 +34,7 @@ public class LoginController {
 		  	HttpSession session=request.getSession();
 			session.setAttribute("user_id", id);
 			session.setMaxInactiveInterval(1000);
+			request.setAttribute("user_id", id);
 			return "index";
 		} catch (UserException e) {
 			System.out.println("wrong username or password!");
