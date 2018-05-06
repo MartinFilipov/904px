@@ -85,7 +85,7 @@ public class UploadController {
 		String category = request.getParameter("category");
 		boolean nsfw = request.getParameter("nsfw") != null;
 		
-		if (imageURL == null) {
+		if (fileName == null) {
 			return "upload";
 		}
 		
