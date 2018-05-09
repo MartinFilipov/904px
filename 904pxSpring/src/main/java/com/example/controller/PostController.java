@@ -65,8 +65,8 @@ public class PostController {
 	@RequestMapping(value = "/postDetails/{postId}/{commentId}", method = RequestMethod.GET)
 	public String likeComment(HttpServletRequest request, Model model, @PathVariable(value = "postId") Integer postId,
 			@PathVariable(value = "commentId") Integer commentId) {
-		System.out.println("\n\n Like comment");
-		PostDAO.getInstance().increaseLikesByCommentID(commentId);
+		int userID=(int) request.getSession(false).getAttribute("user_id");
+		PostDAO.getInstance().increaseLikesOfComment(commentId,userID);
 		return "forward:/postDetails/" + postId;
 	}
 

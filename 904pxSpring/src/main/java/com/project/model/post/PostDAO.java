@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.project.model.database.DBConnection;
 import com.project.model.imageCharacteristics.ImageCharacteristics;
+import com.project.model.user.UserDAO;
 
 public class PostDAO {
 	private static final int INVALID_ID = 0;
@@ -32,7 +33,7 @@ public class PostDAO {
 	private static final String DELETE_CAMERA_FROM_DATABASE = "DELETE FROM cameras WHERE camera_id = ?";
 	private static final String ADD_CAMERA_MODEL_TO_DATABASE = "INSERT INTO cameras(model) VALUES(?);";
 	private static final String ADD_LOCATION_TO_DATABASAE = "INSERT INTO locations(city, country) VALUES(?,?);";
-	private static final String POST_DATA = "SELECT p.image_url, p.description, p.nsfw, p.title, p.likes, p.views, p.date_uploaded, ";
+	private static final String POST_DATA = "SELECT p.image_url, p.description, p.nsfw, p.title,p.views, p.date_uploaded, ";
 	private static final String LOCATION_DATA = "l.city, l.country, ";
 	private static final String IMAGE_CHARACTERISTICS_DATA = "i.date_taken, i.exposure_time, i.f_number, i.focal_length, i.iso_speed_ratings, ";
 	private static final String GET_POST_BY_ID = POST_DATA + LOCATION_DATA + IMAGE_CHARACTERISTICS_DATA
@@ -42,9 +43,9 @@ public class PostDAO {
 			+ "JOIN image_characteristics i ON p.image_characteristics_id = i.image_characteristics_id "
 			+ "JOIN cameras c ON c.camera_id = i.camera_id " + "WHERE p.post_id = ?;";
 	private static final String GET_ALL_USER_UPLOAD_IDS = "SELECT p.post_id FROM posts p JOIN users u on p.user_id = u.user_id WHERE u.user_id = ?;";
-	private static final String ADD_COMMENT_TO_DATABASE = "INSERT into comments(comment,post_id,user_id,likes) values (?,?,?,0);";
-	private static final String GET_ALL_COMMENTS_FROM_DATABASE = "SELECT comment,username,likes,comment_id FROM comments c JOIN users u on c.user_id=u.user_id WHERE post_id=? ORDER BY likes DESC";
-	private static final String INCREASE_LIKES_OF_COMMENT_BY_COMMENT_ID = "UPDATE comments SET likes=likes+1 WHERE comment_id=?;";
+	private static final String ADD_COMMENT_TO_DATABASE = "INSERT into comments(comment,post_id,user_id) values (?,?,?);";
+	private static final String GET_ALL_COMMENTS_FROM_DATABASE = "SELECT c.comment,u.username,c.comment_id,(SELECT count(user_id) from comments_has_likes WHERE comment_id=c.comment_id) as likes FROM comments c JOIN users u on c.user_id=u.user_id WHERE post_id=? ORDER BY likes DESC;";
+	private static final String INCREASE_LIKES_OF_COMMENT_BY_COMMENT_ID = "INSERT into comments_has_likes (comment_id,user_id) values(?,?);";
 	private static final String INCREMENT_POST_VIEWS_BY_ID = "UPDATE posts SET views = views + 1 WHERE post_id = ?";
 	private static final String GET_FRESH_POST_IDS = "SELECT post_id FROM posts ORDER BY post_id desc;";
 	private static final int CAMERA_EXISTS = 1;
@@ -319,7 +320,7 @@ public class PostDAO {
 				String country = set.getString("country");
 				boolean nsfw = set.getString("nsfw").equals("T");
 				System.out.println("Not safe for work: " + nsfw);
-				int likes = set.getInt("likes");
+//				int likes = set.getInt("likes");
 				int views = set.getInt("views");
 				LocalDate dateUploaded = set.getDate("date_uploaded").toLocalDate();
 
@@ -331,7 +332,7 @@ public class PostDAO {
 				String cameraModel = set.getString("model");
 
 				Post post = new Post.Builder(imageURL).title(title).category(category).id(id).description(description)
-						.location(city, country).nsfw(nsfw).likes(likes).views(views).dateUploaded(dateUploaded)
+						.location(city, country).nsfw(nsfw).views(views).dateUploaded(dateUploaded)
 						.build();
 
 				return post;
@@ -404,13 +405,14 @@ public class PostDAO {
 			statement.setInt(1, postID);
 			ResultSet set = statement.executeQuery();
 			List<Comment> comments = new ArrayList<>();
-			while (set.next()) {
+			while (set.next()) {						
 				comments.add(new Comment(set.getString("comment"), set.getString("username"), set.getInt("likes"),
 						set.getInt("comment_id")));
 			}
 			System.out.println("\n Zaqvkata mina");
 			return comments;
 		} catch (SQLException e) {
+			e.printStackTrace();
 			throw new PostException("Something went wrong with the database");
 		}
 	}
@@ -426,10 +428,11 @@ public class PostDAO {
 
 	}
 
-	public void increaseLikesByCommentID(int commentId) {
+	public void increaseLikesOfComment(int commentId,int user_id) {
 		try {
 			PreparedStatement statement = connection.prepareStatement(INCREASE_LIKES_OF_COMMENT_BY_COMMENT_ID);
 			statement.setInt(1, commentId);
+			statement.setInt(2, user_id);
 			statement.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println("Something went wrong while updating likes");

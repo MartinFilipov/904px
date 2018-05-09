@@ -2,7 +2,7 @@
 
 <c:forEach var="post" items="${posts}">
 	<div class="gallery" style="height:350px; border:0px;" title="Border" style="border: 1px dotted black;">
-		<a href="postDetails/${post.id}"> <img src="${post.imageURL}"
+		<a href="postDetails/${post.id}"> <img src="/904px/download/${post.imageName}"
 			width="300" height="200">
 		</a>
 	</div>
