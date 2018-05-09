@@ -12,27 +12,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
-<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
-<script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
-<script type="text/javascript" src="js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css"
+	href="/904px/css/bootstrap.min.css" />
+<link rel="stylesheet" type="text/css"
+	href="/904px/css/font-awesome.min.css" />
+<script type="text/javascript" src="/904px/js/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="/904px/js/bootstrap.min.js"></script>
 
 <link rel="icon" type="image/png" href="icons/favicon.ico" />
-<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">
 <link rel="stylesheet" type="text/css"
-	href="fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
-<link rel="stylesheet" type="text/css" href="vendor/animate/animate.css">
+	href="/904px/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css"
-	href="vendor/css-hamburgers/hamburgers.min.css">
+	href="/904px/css/font-awesome.min.css">
 <link rel="stylesheet" type="text/css"
-	href="vendor/animsition/css/animsition.min.css">
+	href="/904px/fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
 <link rel="stylesheet" type="text/css"
-	href="vendor/select2/select2.min.css">
+	href="/904px/vendor/animate/animate.css">
 <link rel="stylesheet" type="text/css"
-	href="vendor/daterangepicker/daterangepicker.css">
-<link rel="stylesheet" type="text/css" href="css/util.css">
-<link rel="stylesheet" type="text/css" href="css/main.css">
+	href="/904px/vendor/css-hamburgers/hamburgers.min.css">
+<link rel="stylesheet" type="text/css"
+	href="/904px/vendor/animsition/css/animsition.min.css">
+<link rel="stylesheet" type="text/css"
+	href="/904px/vendor/select2/select2.min.css">
+<link rel="stylesheet" type="text/css"
+	href="/904px/vendor/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" type="text/css" href="/904px/css/util.css">
+<link rel="stylesheet" type="text/css" href="/904px/css/main.css">
 </head>
 <body>
 
@@ -45,7 +50,7 @@
 			<span class="icon-bar"></span> <span class="icon-bar"></span> <span
 				class="icon-bar"></span>
 		</button>
-		<a class="navbar-brand" href="./"><b>904<sup>px</sup></b></a>
+		<a class="navbar-brand" href="/904px/"><b>904<sup>px</sup></b></a>
 	</div>
 	<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 		<ul class="nav navbar-nav">
@@ -64,16 +69,17 @@
 		<div class="col-sm-3 col-md-3 pull-right">
 			<ul class="nav navbar-nav">
 				<c:if test="${empty sessionScope.user_id}">
-					<li><a href="login">Log in</a></li>
-					<li><a href="register">Register</a></li>
+					<li><a href="/904px/login">Log in</a></li>
+					<li><a href="/904px/register">Register</a></li>
 				</c:if>
 				<c:if test="${!empty sessionScope.user_id}">
-					<li><a href="profile">Profile</a></li>
-					<li><a href="logout">Log out</a></li>
+					<li><a href="/904px/profile">Profile</a></li>
+					<li><a href="/904px/logout">Log out</a></li>
 				</c:if>
 			</ul>
 		</div>
-		<form class="navbar-form" role="search">
+		<form action="/904px/search" method="post" class="navbar-form"
+			role="search">
 			<div class="input-group">
 				<input type="text" class="form-control" placeholder="Search"
 					name="q">
@@ -89,7 +95,7 @@
 	</nav>
 	</div>
 	<div class="limiter">
-		<form action="./login" method="post">
+		<form action="/904px/login" method="post">
 			<div class="container-login100"
 				style="background-image: url('images/bg-01.jpg');">
 				<div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
@@ -138,15 +144,16 @@
 
 	<div id="dropDownSelect1"></div>
 
-	<script src="login/vendor/jquery/jquery-3.2.1.min.js"></script>
-	<script src="login/vendor/animsition/js/animsition.min.js"></script>
-	<script src="login/vendor/bootstrap/js/popper.js"></script>
-	<script src="login/vendor/bootstrap/js/bootstrap.min.js"></script>
-	<script src="login/vendor/select2/select2.min.js"></script>
-	<script src="login/vendor/daterangepicker/moment.min.js"></script>
-	<script src="login/vendor/daterangepicker/daterangepicker.js"></script>
-	<script src="login/vendor/countdowntime/countdowntime.js"></script>
-	<script src="login/js/main.js"></script>
-
+	<script src="/904px/vendor/jquery/jquery-3.2.1.min.js"></script>
+	<script src="/904px/vendor/animsition/js/animsition.min.js"></script>
+	<script src="/904px/vendor/bootstrap/js/popper.js"></script>
+	<script src="/904px/vendor/bootstrap/js/bootstrap.min.js"></script>
+	<script src="/904px/vendor/select2/select2.min.js"></script>
+	<script src="/904px/vendor/daterangepicker/moment.min.js"></script>
+	<script src="/904px/vendor/daterangepicker/daterangepicker.js"></script>
+	<script src="/904px/vendor/countdowntime/countdowntime.js"></script>
+	<script src="/904px/js/main.js"></script>
+	<!--  FACEBOOK LOGIN ATTEMPT -->
+	
 </body>
 </html>

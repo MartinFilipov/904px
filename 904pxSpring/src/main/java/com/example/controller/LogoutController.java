@@ -14,7 +14,7 @@ public class LogoutController {
 		if (request.getSession(false) != null && request.getSession(false).getAttribute("user_id") != null) {
 			request.getSession(false).invalidate();
 		}
-		return "index";
+		return "forward:/index";
 	}
 
 }

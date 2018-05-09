@@ -17,13 +17,13 @@
 			window.scrollTo(0, 1);
 		}
 	</script>
-	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
+	<link rel="stylesheet" type="text/css" href="/904px/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/904px/css/font-awesome.min.css" />
     <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
     <script type="text/javascript" src="js/bootstrap.min.js"></script>
     
-	<link href="css/font-awesome.css" rel="stylesheet">
-	<link href="css/style.css" rel='stylesheet' type='text/css' />
+	<link href="/904px/css/font-awesome.css" rel="stylesheet">
+	<link href="/904px/css/style.css" rel='stylesheet' type='text/css' />
 	<link href="//fonts.googleapis.com/css?family=Josefin+Sans:100,100i,300,300i,400,400i,600,600i,700,700i" rel="stylesheet">
 	<link href="//fonts.googleapis.com/css?family=PT+Sans:400,400i,700,700i" rel="stylesheet">
 </head>
@@ -37,7 +37,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="./"><b>904<sup>px</sup></b></a>
+        <a class="navbar-brand" href="/904px/"><b>904<sup>px</sup></b></a>
     </div>
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav">
@@ -57,24 +57,27 @@
         <div class="col-sm-3 col-md-3 pull-right">
         <ul class="nav navbar-nav">
         	<c:if test="${empty sessionScope.user_id}">
-            <li><a href="login">Log in</a></li>
-            <li><a href="register">Register</a></li>
+            <li><a href="/904px/login">Log in</a></li>
+            <li><a href="/904px/register">Register</a></li>
             </c:if>
             <c:if test="${!empty sessionScope.user_id}">
-            <li><a href="profile">Profile</a></li>
-            <li><a href="logout">Log out</a></li>
+            <li><a href="/904px/profile">Profile</a></li>
+            <li><a href="/904px/logout">Log out</a></li>
             </c:if>
       	</ul>
             </div>
-            <form class="navbar-form" role="search">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search" name="q">
-                    <div class="input-group-btn">
-                        <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
-                    </div>
-                    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                </div>
-            </form>
+            <form action="/904px/search" method="post" class="navbar-form" role="search">
+			<div class="input-group">
+				<input type="text" class="form-control" placeholder="Search"
+					name="q">
+				<div class="input-group-btn">
+					<button class="btn btn-default" type="submit">
+						<i class="glyphicon glyphicon-search"></i>
+					</button>
+				</div>
+				<div class="collapse navbar-collapse"
+					id="bs-example-navbar-collapse-1"></div>
+		</form>
     </div>
 </nav>
 

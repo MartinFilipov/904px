@@ -31,7 +31,7 @@ public class UploadController {
 	
 	@RequestMapping(value="/upload", method= {RequestMethod.GET, RequestMethod.POST})
 	public String loadPage(Model model, HttpServletRequest request) {
-		if(request.getSession(false)==null || request.getSession(false).getAttribute("user_id")==null){
+		if (request.getSession().getAttribute("user_id") == null) {
 			return "login";
 		}
 		
@@ -52,8 +52,8 @@ public class UploadController {
 	
 	@RequestMapping(value="/uploadImage", method=RequestMethod.POST)
 	public String selectImage(Model model, HttpServletRequest request, @RequestParam("filename") MultipartFile file) throws PostException {
-		if (request.getSession(false) == null) {
-			return "index";
+		if (request.getSession().getAttribute("user_id") == null) {
+			return "forward:/index";
 		}
 		
 		try {
@@ -74,8 +74,8 @@ public class UploadController {
 	
 	@RequestMapping(value="/upload/{filename:.+}", method=RequestMethod.POST)
 	public String uploadPost(HttpServletRequest request, @PathVariable("filename") String fileName) {
-		if (request.getSession(false) == null) {
-			return "index";
+		if (request.getSession().getAttribute("user_id") == null) {
+			return "forward:/index";
 		}
 		
 		String imageURL = FILE_PATH + fileName;
@@ -107,8 +107,8 @@ public class UploadController {
 	
 	@RequestMapping(value="/uploaded", method= {RequestMethod.POST, RequestMethod.GET})
 	public String loadUserPhotos(Model model, HttpServletRequest request) {
-		if (request.getSession(false) == null) {
-			return "index";
+		if (request.getSession().getAttribute("user_id") == null) {
+			return "forward:/index";
 		}
 		
 		int userId = (int) (request.getSession(false).getAttribute("user_id"));
@@ -133,16 +133,20 @@ public class UploadController {
 //		//Adjust return
 //		return "forward:/postDetails";
 //	}
-	@RequestMapping(value="/postDetails/{id}/addComment",method=RequestMethod.POST)
-	public String addComment(Model model,HttpServletRequest request,@PathVariable Integer id){
-		System.out.println("/n/n/n id: "+id+"/n/n");
-		int user_id=(int) request.getSession(false).getAttribute("user_id");
-//			String username=UserDAO.getInstance().getUsername(user_id);
-//			Comment comment=new Comment(, username);
-		PostDAO.getInstance().addComment(user_id, id, (String)request.getParameter("text"));
-		//Adjust return
-//		return  "forward:/postDetails/{id}";
-		return "forward:/postDetails/"+id;
-	}
+	
+	
+	
+	
+//	@RequestMapping(value="/postDetails/{id}/addComment",method=RequestMethod.POST)
+//	public String addComment(Model model,HttpServletRequest request,@PathVariable Integer id){
+//		System.out.println("/n/n/n id: "+id+"/n/n");
+//		int user_id=(int) request.getSession(false).getAttribute("user_id");
+////			String username=UserDAO.getInstance().getUsername(user_id);
+////			Comment comment=new Comment(, username);
+//		PostDAO.getInstance().addComment(user_id, id, (String)request.getParameter("text"));
+//		//Adjust return
+////		return  "forward:/postDetails/{id}";
+//		return "forward:/postDetails/"+id;
+//	}
 
 }

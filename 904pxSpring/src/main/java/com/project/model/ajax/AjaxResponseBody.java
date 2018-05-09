@@ -1,6 +1,8 @@
 package com.project.model.ajax;
 
-import java.util.List;
+
+
+import com.project.model.post.Comment;
 
 public class AjaxResponseBody {
 	
@@ -11,7 +13,7 @@ public class AjaxResponseBody {
 	String code;
 	
 //	@JsonView(Views.Public.class)
-	List<String> result;
+	Comment result;
 
 	public String getMsg() {
 		return msg;
@@ -29,13 +31,15 @@ public class AjaxResponseBody {
 		this.code = code;
 	}
 
-	public List<String> getResult() {
+	public Comment getResult() {
 		return result;
 	}
 
-	public void setResult(List<String> result) {
+	public void setResult(Comment result) {
 		this.result = result;
 	}
+
+
 	
 	
 }

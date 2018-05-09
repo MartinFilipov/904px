@@ -30,7 +30,7 @@ public class RegisterController {
 		}
 		
 		request.setAttribute("registered", "yes");
-		return "index";
+		return "forward:/index";
 	}
 	
 }

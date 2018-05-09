@@ -23,13 +23,10 @@ public class PostController {
 
 	@RequestMapping(value = "/postDetails/{id}", method = { RequestMethod.POST, RequestMethod.GET })
 	public String getPostDetails(HttpServletRequest request, Model model, @PathVariable Integer id) {
-		// if (request.getSession(false) == null) {
-		// return "index";
-		// }
-		System.out.println("\n\n Post COntroller servlet");
+
 		PostDAO dao = PostDAO.getInstance();
 
-		if (request.getSession(false).getAttribute("user_id") != null) {
+		if (request.getSession().getAttribute("user_id") != null) {
 			try {
 				List<Album> albums = UserDAO.getInstance()
 						.getAllAlbums((int) request.getSession(false).getAttribute("user_id"));
@@ -42,9 +39,19 @@ public class PostController {
 			dao.increasePostViewsById(id);
 			Post post = dao.getPostById(id);
 			model.addAttribute("post", post);
-
+			
+			String username=dao.getPostCreator(id);
+			model.addAttribute("username",username);
 			try {
 				List<Comment> comments = dao.getAllComments(id);
+				if (request.getSession().getAttribute("user_id") != null) {
+					int userId=(int) request.getSession().getAttribute("user_id");
+					for (Comment c : comments) {
+						if (dao.checkIfCommentIsLikedByUser(c.getId(), userId)) {
+							c.setLikedByCurrentUser(true);
+						}
+					}
+				}
 				model.addAttribute("comments", comments);
 				System.out.println("\n Komentarite beha getnati");
 				System.out.println("\nComments: " + comments + "\n");
@@ -62,14 +69,6 @@ public class PostController {
 		return "pageNotFound";
 	}
 
-	@RequestMapping(value = "/postDetails/{postId}/{commentId}", method = RequestMethod.GET)
-	public String likeComment(HttpServletRequest request, Model model, @PathVariable(value = "postId") Integer postId,
-			@PathVariable(value = "commentId") Integer commentId) {
-		int userID=(int) request.getSession(false).getAttribute("user_id");
-		PostDAO.getInstance().increaseLikesOfComment(commentId,userID);
-		return "forward:/postDetails/" + postId;
-	}
-
 	@RequestMapping(value = "/fresh", method = RequestMethod.GET)
 	public String getFreshPage(HttpServletRequest request, Model model) {
 		try {
@@ -81,4 +80,14 @@ public class PostController {
 		}
 		return "pageNotFound";
 	}
+	
+	@RequestMapping(value = "/search", method = RequestMethod.POST)
+	public String getSearchPage(HttpServletRequest request, Model model) {
+		PostDAO dao=PostDAO.getInstance();
+		List<Post> searchResults=dao.searchForPosts(request.getParameter("q"));
+		model.addAttribute("searchRequest", "yes");
+		model.addAttribute("searchResults", searchResults);
+		return "forward:/index";
+	}
+	
 }

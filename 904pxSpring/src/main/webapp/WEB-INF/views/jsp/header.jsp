@@ -10,6 +10,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" type="text/css" href="/904px/css/bootstrap.min.css" />
 <link rel="stylesheet" type="text/css" href="/904px/css/font-awesome.min.css" />
+
+<!-- 
+<link href="/904px/css/blog-post.css" rel="stylesheet">
+<link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+ -->
 <script type="text/javascript" src="/904px/js/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" src="/904px/js/bootstrap.min.js"></script>
 
@@ -20,7 +25,6 @@ div.gallery {
 	float: left;
 	width: 360px;
 }
-
 div.gallery:hover {
 	border: 1px solid #777;
 }
@@ -76,7 +80,7 @@ div.desc {
 				</c:if>
 			</ul>
 		</div>
-		<form class="navbar-form" role="search">
+		<form action="/904px/search" method="post" class="navbar-form" role="search">
 			<div class="input-group">
 				<input type="text" class="form-control" placeholder="Search"
 					name="q">

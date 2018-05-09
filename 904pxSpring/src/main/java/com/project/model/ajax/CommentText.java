@@ -1,26 +1,16 @@
 package com.project.model.ajax;
 
-public class SearchCriteria {
+public class CommentText {
 
-	String username;
-	private int number;
-	
-	
+	String comment;	
 
-	public int getNumber() {
-		return number;
+
+	public String getComment() {
+		return comment;
 	}
 
-	public void setNumber(int number) {
-		this.number = number;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
+	public void setComment(String username) {
+		this.comment = username;
 	}
 
 	//getters and setters

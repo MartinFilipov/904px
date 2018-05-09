@@ -35,7 +35,7 @@ public class LoginController {
 			session.setAttribute("user_id", id);
 			session.setMaxInactiveInterval(1000);
 			request.setAttribute("user_id", id);
-			return "index";
+			return "forward:/index";
 		} catch (UserException e) {
 			System.out.println("wrong username or password!");
 			return "login";

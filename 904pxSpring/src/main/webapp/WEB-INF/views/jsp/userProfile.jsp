@@ -4,11 +4,18 @@
 <div align="center" style="border: 0px solid black">
 
 
-		<c:if test="${!empty sessionScope.user_id}">
-		<a href="/904px/profile/${user.username}/follow">
-			<button>Follow</button>
-		</a>
+	<c:if test="${not empty sessionScope.user_id}">
+		<c:if test="${empty followed}">
+			<a href="/904px/profile/${user.username}/follow">
+				<button>Follow</button>
+			</a>
 		</c:if>
+		<c:if test="${not empty followed}">
+			<a href="/904px/profile/${user.username}/unfollow">
+				<button>Unfollow</button>
+			</a>
+		</c:if>
+	</c:if>
 
 	<c:if test="${user.firstName != ''}">
 		<c:if test="${ user.lastName!= ''}">
@@ -21,23 +28,23 @@
 	</c:if>
 
 	<c:if test="${user.profilePictureURL != ''}">
-		<h6>Profile picture url:${user.profilePictureURL }</h6>
-		<img src="${user.profilePictureURL }" width="350" float:right>
+		<img style="display: block;" src="${user.profilePictureURL }" width="350" float:right>
 	</c:if>
 
 	<c:if test="${user.coverPhotoURL != ''}">
-		<h6>Cover photo url: ${user.coverPhotoURL }</h6>
-		<img src="${user.coverPhotoURL }" width="350">
+		<img style="display: block;" src="${user.coverPhotoURL }" width="350">
 	</c:if>
 
 </div>
+<div class="col-md-4">
 <c:forEach var="album" items="${albums}">
-	<div class="gallery" title="Border" style="border: 1px dotted black;">
-		<h2>${album.name}</h2>
+	<div class="gallery">
 		<a href="/904px/profile/album/${album.id}">
 			<h2>${album.name}</h2>
 		</a>
 	</div>
+	
 </c:forEach>
+</div>
 </body>
 </html>

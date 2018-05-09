@@ -7,6 +7,7 @@ public class Comment {
 //	private User user;
 	private String username;
 	private int likes;
+	private boolean isLikedByCurrentUser;
 	
 	public Comment(String comment,String username,int likes,int id){
 		setComment(comment);
@@ -14,6 +15,14 @@ public class Comment {
 //		setUser(user);
 		setUsername(username);
 		setId(id);
+	}
+	
+	public boolean getIsLikedByCurrentUser() {
+		return isLikedByCurrentUser;
+	}
+
+	public void setLikedByCurrentUser(boolean isLikedByCurrentUser) {
+		this.isLikedByCurrentUser = isLikedByCurrentUser;
 	}
 
 	private void setId(int id) {

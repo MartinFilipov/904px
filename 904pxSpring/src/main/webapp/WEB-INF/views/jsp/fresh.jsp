@@ -1,11 +1,10 @@
 <%@include file="header.jsp"%>
 
 <c:forEach var="post" items="${posts}">
-	<div class="gallery" style="height:350px; border:0px;" title="Border" style="border: 1px dotted black;">
-		<a href="postDetails/${post.id}"> <img src="/904px/download/${post.imageName}"
-			width="300" height="200">
-		</a>
-	</div>
+	<a href="/904px/postDetails/${post.id}"> <img
+		src="/904px/download/${post.imageName}" width="400"
+		style="margin: 20px; padding-left: 50px">
+	</a>
 </c:forEach>
 </body>
 </html>

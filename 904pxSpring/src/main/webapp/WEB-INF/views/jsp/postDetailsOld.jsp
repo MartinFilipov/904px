@@ -35,25 +35,36 @@
 				<h4>${comment.username}</h4>
 			</a>
 			<p>${comment.comment }</p>
-			<p>Likes:${comment.likes}</p>
-
-			<c:if test="${!empty sessionScope.user_id}">
-				<a href="/904px/postDetails/${post.id}/${comment.id}">
-					<button>Like</button>
-				</a>
+			<h6>
+				Likes:
+				<p id="likes${comment.id}">${comment.likes}</p>
+			</h6>
+			<c:if test="${not empty sessionScope.user_id}">
+				<p hidden id="commentID${comment.id}">${comment.id }</p>
+				<c:choose>
+					<c:when test="${not comment.isLikedByCurrentUser}">
+						<button id="likeButton${comment.id}" onclick="like(${comment.id})">Like</button>
+						<button hidden id="dislikeButton${comment.id}" onclick="dislike(${comment.id})">Dislike</button>
+					</c:when>
+					<c:otherwise>
+						<button hidden id="likeButton${comment.id}" onclick="like(${comment.id})">Like</button>
+						<button id="dislikeButton${comment.id}" onclick="dislike(${comment.id})">Dislike</button>
+					</c:otherwise>
+				</c:choose>
 			</c:if>
 		</div>
 	</c:forEach>
+	<div id="newComments"></div>
+	
+	<p hidden id="postID">${post.id }</p>
 
+	<c:if test="${not empty sessionScope.user_id}">
 
-	<c:if test="${!empty sessionScope.user_id}">
-		<form action="/904px/postDetails/${post.id}/addComment" method="post">
-			<input name='text' placeholder="Enter comment:" />
-			<button>Add comment</button>
-		</form>
+		<input id="text" name='text' placeholder="Enter comment:" />
+		<button id="addComment">Add comment</button>
 	</c:if>
 </div>
-<c:if test="${!empty sessionScope.user_id}">
+<c:if test="${not empty sessionScope.user_id}">
 	<div>
 		<h3>Add to album</h3>
 		<ul>
@@ -66,4 +77,107 @@
 	</div>
 </c:if>
 </body>
+
+<script>
+
+	function like(varId){
+		console.log(varId);
+		var postID = $("#postID").html();
+		
+		var commentID = $("#commentID"+varId).html();
+		var likes = $("#likes"+varId).html();
+		$("#likes"+varId).html(+likes + 1);
+		$("#likeButton"+varId).hide();
+		$("#dislikeButton"+varId).show();
+		$.ajax({
+			url : '/904px/postDetails/' + postID + '/' + varId + '/like',
+			type : 'POST',
+			data : null
+		});
+	}
+	function dislike(varId){
+		console.log(varId);
+		var postID = $("#postID").html();
+		var commentID = $("#commentID"+varId).html();
+		var likes = $("#likes"+varId).html();
+		$("#likes"+varId).html(+likes - 1);
+		$("#likeButton"+varId).show();
+		$("#dislikeButton"+varId).hide();
+		$.ajax({
+			url : '/904px/postDetails/' + postID + '/' + varId + '/dislike',
+			type : 'POST',
+			data : null
+		});
+	}
+	/*
+	$("#likeButton").click(function() {
+		console.log($("#commentID").html());
+		var postID = $("#postID").html();
+		var commentID = $("#commentID").html();
+		var likes = $("#likes").html();
+		$("#likes").html(+likes + 1);
+		$("#likeButton").hide();
+		$("#dislikeButton").show();
+		$.ajax({
+			url : '/904px/postDetails/' + postID + '/' + commentID + '/like',
+			type : 'POST',
+			data : null
+		});
+	})
+		$("#dislikeButton").click(
+			function() {
+				console.log($("#commentID").html());
+				var postID = $("#postID").html();
+				var commentID = $("#commentID").html();
+				var likes = $("#likes").html();
+				$("#likes").html(+likes - 1);
+				$("#likeButton").show();
+				$("#dislikeButton").hide();
+				$.ajax({
+					url : '/904px/postDetails/' + postID + '/' + commentID
+							+ '/dislike',
+					type : 'POST',
+					data : null
+				});
+			})
+			*/
+	$("#addComment").click(function() {
+		var postID = $("#postID").html();
+		var comment = $("#text").val();
+		console.log(comment);
+		$.ajax({
+			url : '/904px/postDetails/' + postID + '/addComment/' + comment,
+			type : 'POST',
+			data : null,
+			success : function(data) {
+				console.log(data.result.isLikedByCurrentUser);
+				display(data);
+			}
+		});
+	})
+	
+	function display(data) {
+		var id=data.result.id;
+		var comment=data.result.comment;
+		var isLikedByCurrentUser=data.result.isLikedByCurrentUser;
+		var likes= data.result.likes;
+		var username= data.result.username;
+		var json = "<h4>Ajax Response</h4><pre>"
+				+"<h3>"+username+"</h3>"
+				+ JSON.stringify(data, null, 4) + "</pre>";
+		
+		var json1='<div title="Border" style="border: 1px dotted black;">'+
+			'<a href="/904px/profile/'+username+'">'+
+			'<h4>'+username+'</h4></a>'+'<p>'+comment+'</p><h6>Likes:'+
+			'<p id="likes'+id+'">'+likes+'</p></h6>'+
+			'<c:if test="${not empty sessionScope.user_id}">'+
+			'<p hidden id="commentID'+id+'">'+id+'</p>'+
+			'</c:if><button id="likeButton'+id+'" onclick="like('+id+')">Like</button>'+
+			'<button hidden id="dislikeButton'+id+'" onclick="dislike('+id+')">Dislike</button></div>';
+		var newComments=$('#newComments').html();
+		$('#newComments').html(newComments+json1);
+	}
+	
+
+</script>
 </html>
