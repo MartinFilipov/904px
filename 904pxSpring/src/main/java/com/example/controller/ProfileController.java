@@ -1,6 +1,9 @@
 package com.example.controller;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,14 +11,16 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.project.model.exceptions.UserException;
-import com.project.model.post.Comment;
 import com.project.model.post.Post;
 import com.project.model.post.PostDAO;
 import com.project.model.post.PostException;
@@ -25,6 +30,12 @@ import com.project.model.user.UserDAO;
 
 @Controller
 public class ProfileController {
+	@Autowired
+	private UserDAO userDAO;
+	@Autowired
+	private PostDAO postDAO;
+
+	private static final String FILE_PATH = "D:\\Uploads\\";
 
 	@RequestMapping(method = RequestMethod.GET, value = "/editProfile")
 	public String getProfileEdit(HttpServletRequest request) {
@@ -40,20 +51,21 @@ public class ProfileController {
 			return "login";
 		}
 		int user_id = (int) request.getSession(false).getAttribute("user_id");
-		UserDAO.getInstance().addAlbum(user_id, request.getParameter("albumName"));
+		userDAO.addAlbum(user_id, request.getParameter("albumName"));
 		return "forward:/profile";
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/editor")
-	public String editProfile(HttpServletRequest request) {
+	public String editProfile(Model model, HttpServletRequest request, @RequestParam("profilePicture") MultipartFile profilePicture,
+			@RequestParam("coverPhoto") MultipartFile coverPhoto) {
 		if (request.getSession(false) == null || request.getSession(false).getAttribute("user_id") == null) {
 			return "login";
 		}
+
 		int userID = (int) request.getSession(false).getAttribute("user_id");
-		UserDAO dao = UserDAO.getInstance();
 
 		try {
-			User user = dao.getUser(userID);
+			User user = userDAO.getUser(userID);
 			String firstName = request.getParameter("firstName");
 			if (firstName.equals("")) {
 				firstName = user.getFirstName();
@@ -62,14 +74,56 @@ public class ProfileController {
 			if (lastName.equals("")) {
 				lastName = user.getLastName();
 			}
-			String profilePictureURL = request.getParameter("profilePictureURL");
-			if (profilePictureURL.equals("")) {
-				profilePictureURL = user.getProfilePictureURL();
+
+			String profilePictureName = profilePicture.getOriginalFilename();
+			String fullProfilePicturePath = "";
+
+			if (profilePictureName != "") {
+
+				String username = userDAO.getUsername((int) request.getSession(false).getAttribute("user_id"));
+				
+				File usernameFolder = new File(FILE_PATH + username);
+				
+				if (!usernameFolder.exists()) {
+					usernameFolder.mkdir();
+				}
+				
+				fullProfilePicturePath = FILE_PATH + username + File.separator + profilePictureName;
+
+				File savedProfilePicture = new File(fullProfilePicturePath);
+
+				Files.copy(profilePicture.getInputStream(), savedProfilePicture.toPath(),
+						StandardCopyOption.REPLACE_EXISTING);
+				
+
 			}
-			String coverPhotoURL = request.getParameter("coverPhotoURL");
-			if (coverPhotoURL.equals("")) {
-				coverPhotoURL = user.getCoverPhotoURL();
+			model.addAttribute("profilePictureName", profilePictureName);
+
+			String coverPhotoName = profilePicture.getOriginalFilename();
+			String fullCoverPhotoPath = "";
+
+			if (coverPhotoName != "") {
+
+				String username = userDAO.getUsername((int) request.getSession(false).getAttribute("user_id"));
+				
+				File usernameFolder = new File(FILE_PATH + username);
+				
+				if (!usernameFolder.exists()) {
+					usernameFolder.mkdir();
+				}
+				
+				fullCoverPhotoPath = FILE_PATH + username + File.separator + coverPhotoName;
+
+				File savedCoverPhoto = new File(fullCoverPhotoPath);
+
+				Files.copy(coverPhoto.getInputStream(), savedCoverPhoto.toPath(),
+						StandardCopyOption.REPLACE_EXISTING);
+				
 			}
+			model.addAttribute("coverPhotoName", coverPhotoName);
+			
+			
+
 			// String profilePictureURL = new
 			// File(request.getParameter("profilePicture")).getAbsolutePath();
 			// if (profilePictureURL.equals("")) {
@@ -81,61 +135,65 @@ public class ProfileController {
 			// coverPhotoURL = user.getCoverPhotoURL();
 			// }
 			HttpSession session = request.getSession(false);
-			dao.updateUser((int) session.getAttribute("user_id"), firstName, lastName, profilePictureURL,
-					coverPhotoURL);
+			userDAO.updateUser((int) session.getAttribute("user_id"), firstName, lastName, fullProfilePicturePath,
+					fullCoverPhotoPath);
+			
 			return "forward:/profile";
 			// return "profile";
 		} catch (UserException e) {
 			return "index";
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return "forward:/profile";
 	}
-	
-	@RequestMapping(method =RequestMethod.GET, value = "/profile/{username}/follow")
-	public String followUser(HttpServletRequest request, @PathVariable String username) throws ServletException, IOException {
+
+	@RequestMapping(method = RequestMethod.GET, value = "/profile/{username}/follow")
+	public String followUser(HttpServletRequest request, @PathVariable String username)
+			throws ServletException, IOException {
 		if (request.getSession(false) == null || request.getSession(false).getAttribute("user_id") == null) {
 			return "login";
 		}
-		UserDAO dao=UserDAO.getInstance();
-		int user_id=(int)request.getSession(false).getAttribute("user_id");
+		int user_id = (int) request.getSession(false).getAttribute("user_id");
 		try {
-			int followed_id = dao.getUserIDByUsername(username);
-			dao.followUser(user_id, followed_id);
-			return "forward:/profile/"+username;
+			int followed_id = userDAO.getUserIDByUsername(username);
+			userDAO.followUser(user_id, followed_id);
+			return "forward:/profile/" + username;
 		} catch (UserException e) {
 			System.out.println("\nProfileController:\nCouldn't follow user\n");
-		}		
+		}
 		return "pageNotFound";
 	}
-	
+
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.POST }, value = "/profile")
 	public String load(HttpServletRequest request) throws ServletException, IOException {
 		if (request.getSession(false) == null || request.getSession(false).getAttribute("user_id") == null) {
 			return "login";
 		}
 		int userID = (int) (request.getSession(false).getAttribute("user_id"));
-		UserDAO dao = UserDAO.getInstance();
 		User user;
 		try {
-			user = dao.getUser(userID);
+			user = userDAO.getUser(userID);
 		} catch (UserException e) {
 			return "index";
 		}
 		try {
-			List<Album> albums = dao.getAllAlbums(userID);
+			List<Album> albums = userDAO.getAllAlbums(userID);
 			request.setAttribute("albums", albums);
 		} catch (UserException e) {
 			System.out.println("Couldn't get albums from the DB");
 		}
-		List<Integer> followedUserIds=dao.getUserIdsOfFollowedUsers(userID);
-		List<String> followedUsernames=new ArrayList<>();
- 		for(Integer followedID:followedUserIds){
+		List<Integer> followedUserIds = userDAO.getUserIdsOfFollowedUsers(userID);
+		List<String> followedUsernames = new ArrayList<>();
+		for (Integer followedID : followedUserIds) {
 			try {
-				followedUsernames.add(dao.getUsername(followedID));
+				followedUsernames.add(userDAO.getUsername(followedID));
 			} catch (UserException e) {
 				System.out.println("Couldn't get followed users");
 			}
 		}
- 		request.setAttribute("followed", followedUsernames);
+		request.setAttribute("followed", followedUsernames);
 		request.setAttribute("email", user.getEmail());
 		request.setAttribute("username", user.getUsername());
 		request.setAttribute("firstName", user.getFirstName());
@@ -148,73 +206,54 @@ public class ProfileController {
 	}
 
 	@RequestMapping(value = "/profile/{username}", method = RequestMethod.GET)
-	public String getUserProfile(HttpServletRequest request, Model model, @PathVariable(value = "username") String username) {
+	public String getUserProfile(HttpServletRequest request, Model model,
+			@PathVariable(value = "username") String username) {
 		try {
-			UserDAO dao=UserDAO.getInstance();
-			if(request.getSession(false).getAttribute("user_id")!=null && username.equals(dao.getUsername((int)request.getSession(false).getAttribute("user_id")))){
+			if (request.getSession(false).getAttribute("user_id") != null
+					&& username.equals(userDAO.getUsername((int) request.getSession(false).getAttribute("user_id")))) {
 				return "forward:/profile";
 			}
-			User user=dao.getUser(username);
-//			model.addAttribute("userID", dao.getUserIDByUsername(username));
-//			model.addAttribute("userSessionID",request.getSession(false).getAttribute("user_id"));
+			User user = userDAO.getUser(username);
+			// model.addAttribute("userID", dao.getUserIDByUsername(username));
+			// model.addAttribute("userSessionID",request.getSession(false).getAttribute("user_id"));
 			model.addAttribute("user", user);
-			List<Album> albums=dao.getAllAlbums(dao.getUserIDByUsername(username));
+			List<Album> albums = userDAO.getAllAlbums(userDAO.getUserIDByUsername(username));
 			model.addAttribute("albums", albums);
 		} catch (UserException e) {
 			System.out.println("Something went wrong while getting user from DB");
 		}
 		return "userProfile";
 	}
-	
+
 	@RequestMapping(value = "/profile/album/{id}", method = RequestMethod.GET)
 	public String getPostDetails(HttpServletRequest request, Model model, @PathVariable(value = "id") Integer albumId) {
-//		if (request.getSession(false) == null) {
-//			return "index";
-//		}
+		// if (request.getSession(false) == null) {
+		// return "index";
+		// }
 		try {
-			List<Integer> postIds=UserDAO.getInstance().getAllPostIdsByAlbumID(albumId);
-			PostDAO dao=PostDAO.getInstance();
-			List<Post> posts=new ArrayList<>();
-			for(Integer postIdIndex:postIds){
-				posts.add(dao.getPostById(postIdIndex));
+			List<Integer> postIds = userDAO.getAllPostIdsByAlbumID(albumId);
+			List<Post> posts = new ArrayList<>();
+			for (Integer postIdIndex : postIds) {
+				posts.add(postDAO.getPostById(postIdIndex));
 			}
 			model.addAttribute("posts", posts);
-			model.addAttribute("album",UserDAO.getInstance().getAlbumByID(albumId));
+			model.addAttribute("album", userDAO.getAlbumByID(albumId));
 			return "album";
 		} catch (UserException | PostException e) {
 			System.out.println("Couldn't get all posts by album ID");
 		}
 		return "pageNotFound";
 	}
-	// PostDAO dao = PostDAO.getInstance();
-	//
-	// try {
-	// Post post = dao.getPostById(albumId);
-	// model.addAttribute("post", post);
-	// try{
-	// List<Comment> comments = dao.getAllComments(albumId);
-	// model.addAttribute("comments", comments);
-	// System.out.println("\n Komentarite beha getnati");
-	// System.out.println("\nComments: "+comments+"\n");
-	// return "postDetails";
-	// }catch(PostException e){
-	// System.out.println("\nSomething went wrong while getting the comments");
-	// }
-	// return "postDetails";
-	// } catch (PostException e) {
-	// System.out.println("Could not create post");
-	// }
 
 	@RequestMapping(value = "/profile/album/{id}/add/{postId}", method = RequestMethod.GET)
-	public String addPostToAlbum(HttpServletRequest request, Model model,
-			@PathVariable(value = "id") Integer albumId,
+	public String addPostToAlbum(HttpServletRequest request, Model model, @PathVariable(value = "id") Integer albumId,
 			@PathVariable(value = "postId") Integer postId) {
 		if (request.getSession(false) == null) {
 			return "index";
 		}
-		UserDAO.getInstance().addPostToAlbum(postId, albumId);
-//		model.addAttribute("id", albumId);
-		return "forward:/profile/album/"+albumId;
+		userDAO.addPostToAlbum(postId, albumId);
+		// model.addAttribute("id", albumId);
+		return "forward:/profile/album/" + albumId;
 	}
 
 }

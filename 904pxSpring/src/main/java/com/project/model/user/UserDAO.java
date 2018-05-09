@@ -8,11 +8,20 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.project.model.database.DBConnection;
 import com.project.model.exceptions.UserException;
 import com.project.model.interfaces.IUserDAO;
+import com.project.model.post.PostException;
 
+@Component
 public class UserDAO implements IUserDAO {
+	private static final int INVALID_ID = 0;
+	private static final int KEY_COLUMN_ID = 1;
+	private static final String GET_USERNAME_OF_FILE_OWNER_BY_FILE_NAME = 
+			"SELECT u.username from posts p JOIN users u ON p.user_id = u.user_id WHERE image_url LIKE ?;";
 	private static final String ADD_USER_TO_DB = "INSERT INTO users(username, password, email) VALUES (?,sha1(?),?);";
 	private static final String VALIDATE_USER = "SELECT user_id, username, password FROM users WHERE username = ? AND password = sha1(?);";
 	private static final String GET_USERNAME_FROM_DB = "SELECT username from users WHERE user_id = ?;";
@@ -28,32 +37,21 @@ public class UserDAO implements IUserDAO {
 	private static final String GET_USER_ID_BY_USERNAME="SELECT user_id FROM users WHERE username=?;";
 	private static final String GET_FOLLOWED_USERS="SELECT user_id FROM users_has_followers WHERE follower_id=?;";
 	private static final String FOLLOW_USER="INSERT INTO users_has_followers (user_id,follower_id) VALUES(?,?)";
-	private static UserDAO instance;
-	private Connection connection;
-
-	private UserDAO() {
-		try {
-			connection = DBConnection.getInstance().getConnection();
-
-		} catch (ClassNotFoundException e) {
-			System.out.println("Missing database connection driver");
-		} catch (SQLException e) {
-			System.out.println("Something went wrong with the databse");
-		}
-	}
-
-	public static UserDAO getInstance() {
-		synchronized (UserDAO.class) {
-			if (instance == null) {
-				instance = new UserDAO();
-			}
-		}
-		return instance;
-	}
+	private static final String MAKE_USER_ANONYMOUS =
+			"UPDATE users SET anonymous_user = 1 WHERE user_id = ?;";
+	private static final String REMOVE_SQL_SAFE_UPDATES = 
+			"SET SQL_SAFE_UPDATES=0;";
+	private static final String ADD_SQL_SAFE_UPDATES = 
+			"SET SQL_SAFE_UPDATES=1;";
+	private static final String DELETE_ANONYMOUS_USERS = 
+		"DELETE FROM users WHERE user_id IN (SELECT u.user_id AS uid FROM (SELECT * FROM users WHERE anonymous_user = 1) u);";
+	
+	@Autowired
+	private DBConnection database;
 
 	public String getUsername(int id) throws UserException {
 		try {
-			PreparedStatement statement = connection.prepareStatement(GET_USERNAME_FROM_DB);
+			PreparedStatement statement = database.getConnection().prepareStatement(GET_USERNAME_FROM_DB);
 			statement.setInt(1, id);
 			ResultSet set = statement.executeQuery();
 			if (set.next()) {
@@ -69,7 +67,7 @@ public class UserDAO implements IUserDAO {
 	public boolean updateUser(int id, String firstName, String lastName, String profilePictureURL, String coverPhotoURL)
 			throws UserException {
 		try {
-			PreparedStatement statement = connection.prepareStatement(UPDATE_USER_FROM_DB);
+			PreparedStatement statement = database.getConnection().prepareStatement(UPDATE_USER_FROM_DB);
 			statement.setString(1, firstName);
 			statement.setString(2, lastName);
 			statement.setString(3, profilePictureURL);
@@ -81,11 +79,10 @@ public class UserDAO implements IUserDAO {
 			throw new UserException("Database is not working", e);
 		}
 	}
-
 	
 	public int getUserIDByUsername(String username) throws UserException {
 		try {
-			PreparedStatement statement = connection.prepareStatement(GET_USER_ID_BY_USERNAME);
+			PreparedStatement statement = database.getConnection().prepareStatement(GET_USER_ID_BY_USERNAME);
 			statement.setString(1, username);
 			ResultSet set = statement.executeQuery();
 			if (set.next()) {
@@ -100,7 +97,7 @@ public class UserDAO implements IUserDAO {
 	
 	public User getUser(int id) throws UserException {
 		try {
-			PreparedStatement statement = connection.prepareStatement(GET_USER_FROM_DB);
+			PreparedStatement statement = database.getConnection().prepareStatement(GET_USER_FROM_DB);
 			statement.setInt(1, id);
 			ResultSet set = statement.executeQuery();
 			User user;
@@ -127,7 +124,7 @@ public class UserDAO implements IUserDAO {
 	
 	public User getUser(String username) throws UserException {
 		try {
-			PreparedStatement statement = connection.prepareStatement(GET_USER_FROM_DB_BY_USERNAME);
+			PreparedStatement statement = database.getConnection().prepareStatement(GET_USER_FROM_DB_BY_USERNAME);
 			statement.setString(1, username);
 			ResultSet set = statement.executeQuery();
 			User user;
@@ -154,7 +151,7 @@ public class UserDAO implements IUserDAO {
 	@Override
 	public int login(String username, String password) throws UserException {
 		try {
-			PreparedStatement statement = connection.prepareStatement(VALIDATE_USER);
+			PreparedStatement statement = database.getConnection().prepareStatement(VALIDATE_USER);
 
 			statement.setString(1, username);
 			statement.setString(2, password);
@@ -175,33 +172,51 @@ public class UserDAO implements IUserDAO {
 	}
 
 	@Override
-	public boolean register(String username, String password, String email) {
+	public int register(String username, String password, String email) {
 		if ((username != null && username.trim().length() < User.MIN_USERNAME_LENGTH)
 				&& (password != null && password.trim().length() < User.MIN_PASSWORD_LENGTH)
 				&& (email != null && email.trim().length() < User.MIN_EMAIL_LENGTH)) {
 
 			try {
-				PreparedStatement st = connection.prepareStatement(ADD_USER_TO_DB);
-				st.setString(1, username);
-				st.setString(2, password);
-				st.setString(3, email);
-				st.executeUpdate();
+				PreparedStatement registerUserStatement = database.getConnection().prepareStatement(ADD_USER_TO_DB, 
+						PreparedStatement.RETURN_GENERATED_KEYS);
+				registerUserStatement.setString(1, username);
+				registerUserStatement.setString(2, password);
+				registerUserStatement.setString(3, email);
+				registerUserStatement.executeUpdate();
 
 				password = null;
-
-				return true;
+				
+				return getLastIdFromStatement(registerUserStatement);
 
 			} catch (SQLException e) {
 				System.out.println("Something went wrong with the database");
 			}
 
 		}
-		return false;
+		return INVALID_ID;
+	}
+	
+	public int registerAnonymousUser(String username, String password, String email) throws UserException {
+		
+		try {
+			int anonymousUserId = register(username, password, email);
+			
+			PreparedStatement registerAnonymousUserStatement = database.getConnection().prepareStatement(MAKE_USER_ANONYMOUS);
+			registerAnonymousUserStatement.setInt(1, anonymousUserId);
+			registerAnonymousUserStatement.executeUpdate();
+			
+			return anonymousUserId;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new UserException("Something went wrong with the database",e);
+		}
 	}
 
 	public List<User> getUsers() {
 		try {
-			Statement st = connection.createStatement();
+			Statement st = database.getConnection().createStatement();
 			ResultSet set = st.executeQuery("SELECT username, email FROM users;");
 
 			List<User> users = new ArrayList<>();
@@ -225,7 +240,7 @@ public class UserDAO implements IUserDAO {
 
 	public void addAlbum(int user_id, String name) {
 		try {
-			PreparedStatement st = connection.prepareStatement(ADD_ALBUM_TO_DB);
+			PreparedStatement st = database.getConnection().prepareStatement(ADD_ALBUM_TO_DB);
 			st.setInt(1, user_id);
 			st.setString(2, name);
 			st.executeUpdate();
@@ -236,7 +251,7 @@ public class UserDAO implements IUserDAO {
 
 	public List<Album> getAllAlbums(int user_id) throws UserException {
 		try {
-			PreparedStatement st = connection.prepareStatement(GET_ALL_ALBUMS_BY_ID);
+			PreparedStatement st = database.getConnection().prepareStatement(GET_ALL_ALBUMS_BY_ID);
 			st.setInt(1, user_id);
 			ResultSet set = st.executeQuery();
 			List<Album> albums = new ArrayList<>();
@@ -258,7 +273,7 @@ public class UserDAO implements IUserDAO {
 			} catch (UserException e) {
 				return;
 			}
-			PreparedStatement st = connection.prepareStatement(ADD_POST_TO_ALBUM);
+			PreparedStatement st = database.getConnection().prepareStatement(ADD_POST_TO_ALBUM);
 			st.setInt(1, album_id);
 			st.setInt(2, post_id);
 			st.executeUpdate();
@@ -269,7 +284,7 @@ public class UserDAO implements IUserDAO {
 
 	public List<Integer> getAllPostIdsByAlbumID(int album_id) throws UserException {
 		try {
-			PreparedStatement st = connection.prepareStatement(GET_ALL_POST_IDS_IN_ALBUM_BY_ALBUMID);
+			PreparedStatement st = database.getConnection().prepareStatement(GET_ALL_POST_IDS_IN_ALBUM_BY_ALBUMID);
 			st.setInt(1, album_id);
 			ResultSet set = st.executeQuery();
 			List<Integer> postIds = new ArrayList<>();
@@ -284,7 +299,7 @@ public class UserDAO implements IUserDAO {
 
 	public Album getAlbumByID(int album_id) throws UserException {
 		try {
-			PreparedStatement st = connection.prepareStatement(GET_ALBUM_BY_ALBUM_ID);
+			PreparedStatement st = database.getConnection().prepareStatement(GET_ALBUM_BY_ALBUM_ID);
 			st.setInt(1, album_id);
 			ResultSet set = st.executeQuery();
 			if (set.next()) {
@@ -299,7 +314,7 @@ public class UserDAO implements IUserDAO {
 
 	public boolean albumContainsPost(int album_id, int post_id) throws UserException {
 		try {
-			PreparedStatement st = connection.prepareStatement(CHECK_POST_IN_ALBUM);
+			PreparedStatement st = database.getConnection().prepareStatement(CHECK_POST_IN_ALBUM);
 			st.setInt(1, post_id);
 			st.setInt(2, album_id);
 			ResultSet set = st.executeQuery();
@@ -314,7 +329,7 @@ public class UserDAO implements IUserDAO {
 	}
 	public void followUser(int user_id,int followed_id){
 		try {
-			PreparedStatement st = connection.prepareStatement(FOLLOW_USER);
+			PreparedStatement st = database.getConnection().prepareStatement(FOLLOW_USER);
 			st.setInt(1, followed_id);
 			st.setInt(2, user_id);
 			st.executeUpdate();
@@ -326,7 +341,7 @@ public class UserDAO implements IUserDAO {
 	public List<Integer> getUserIdsOfFollowedUsers(int user_id){
 		List<Integer> followedUserIds = new ArrayList<>();
 		try{
-			PreparedStatement st = connection.prepareStatement(GET_FOLLOWED_USERS);
+			PreparedStatement st = database.getConnection().prepareStatement(GET_FOLLOWED_USERS);
 			st.setInt(1, user_id);
 			ResultSet set=st.executeQuery();
 			while(set.next()){
@@ -336,5 +351,47 @@ public class UserDAO implements IUserDAO {
 			System.out.println("Couldn't get followed users");
 		}	
 		return followedUserIds;
+	}
+	
+	private int getLastIdFromStatement(PreparedStatement preparedStatement) throws SQLException {
+		ResultSet keys = preparedStatement.getGeneratedKeys();
+		if (keys.next()) {
+			return keys.getInt(KEY_COLUMN_ID);
+		}
+		return INVALID_ID;
+	}
+	
+	public void deleteAnonymousUsers() throws UserException {
+		try {
+			Statement st1 = database.getConnection().createStatement();
+			st1.executeUpdate(REMOVE_SQL_SAFE_UPDATES);
+			
+			Statement st2 = database.getConnection().createStatement();
+			st2.executeUpdate(DELETE_ANONYMOUS_USERS);
+			
+			Statement st3 = database.getConnection().createStatement();
+			st3.executeUpdate(ADD_SQL_SAFE_UPDATES);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new UserException("Could not delete anonymous users", e);
+		}
+	}
+	
+	public String getUsernameOfFileOwnerByFileName(String fileName) throws PostException {
+		try {
+			PreparedStatement st = database.getConnection().prepareStatement(GET_USERNAME_OF_FILE_OWNER_BY_FILE_NAME);
+			st.setString(1, "%"+fileName);
+			
+			ResultSet set = st.executeQuery();
+			
+			if (set.next()) {
+				return set.getString("username");
+			} else {
+				throw new PostException("Could not get username");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new PostException("Could not get username");
+		}
 	}
 }
