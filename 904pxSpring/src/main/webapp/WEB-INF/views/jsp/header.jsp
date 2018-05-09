@@ -53,7 +53,7 @@ div.desc {
 	<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 		<ul class="nav navbar-nav">
 			<!-- <li class="active"><a href="#">Popular</a></li>-->
-			<li><a href="#">Popular</a></li>
+			<li><a href="/904px/popular">Popular</a></li>
 			<li><a href="/904px/fresh">Fresh</a></li>
 			<li class="dropdown"><a href="#" class="dropdown-toggle"
 				data-toggle="dropdown">More <b class="caret"></b></a>

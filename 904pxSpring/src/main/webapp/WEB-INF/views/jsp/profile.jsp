@@ -23,14 +23,12 @@
 		<h1>Email: ${email}</h1>
 	</c:if>
 
-	<c:if test="${profilePictureURL != ''}">
-		<h6>Profile picture url:${profilePictureURL }</h6>
-		<img src="${profilePictureURL }" width="350" float:right>
+	<c:if test="${profilePictureName != ''}">
+		<img src="/904px/download/${profilePictureName}" width="350" float:right>
 	</c:if>
 
-	<c:if test="${coverPhotoURL != ''}">
-		<h6>Cover photo url: ${coverPhotoURL }</h6>
-		<img src="${coverPhotoURL }" width="350">
+	<c:if test="${coverPhotoName != ''}">
+		<img src="/904px/download/${coverPhotoName}" width="350">
 	</c:if>
 
 	<h1>Affection: ${affection }</h1>

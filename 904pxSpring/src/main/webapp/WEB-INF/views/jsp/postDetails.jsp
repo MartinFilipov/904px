@@ -1,8 +1,27 @@
 <%@include file="header.jsp"%>
 
 <div class="gallery">
-	<img src="/904px/download/${post.imageName}" width="300" height="200">
 
+	<c:if test="${not empty sessionScope.user_id}">
+		<div hidden id="post_id">${post.id}</div>
+		<div hidden id="user_id">${sessionScope.user_id}</div>
+	</c:if>
+	<img src="/904px/download/${post.imageName}" width="300" height="200">
+	<div> 
+		<h2>Likes: <div id="post_likes"> ${post.likes} </div> </h2>
+		<h2>Views: ${post.views}</h2>
+		<h2>Rating: ${post.rating}</h2>
+	</div>
+	
+	<c:if test="${liked}"> 
+		<button id="dislike_button" onclick="decreaseLikes()"> Dislike </button>
+		<button hidden id="like_button" onclick="increaseLikes()"> Like </button>
+	</c:if>
+	<c:if test="${not liked}">
+		<button hidden id="dislike_button" onclick="decreaseLikes()"> Dislike </button>
+		<button id="like_button" onclick="increaseLikes()"> Like </button>
+	</c:if>
+	
 	<h2>Title: ${post.title}</h2>
 	<h2>Description: ${post.description}</h2>
 	<h2>Category: ${post.category}</h2>
@@ -16,7 +35,6 @@
 		<h3>Country: ${post.location.country}</h3>
 	</div>
 	<div>
-		<h2>Likes: ${post.likes} Views: ${post.views}</h2>
 		<h2>Date uploaded: ${post.dateUploaded}</h2>
 	</div>
 	<div>
@@ -65,5 +83,8 @@
 		</ul>
 	</div>
 </c:if>
+
+<script src="/904px/js/like_dislike.js"></script>
+ 
 </body>
 </html>
