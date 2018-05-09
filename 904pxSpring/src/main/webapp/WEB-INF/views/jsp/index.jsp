@@ -18,11 +18,9 @@
 			<h1>Nothing came up on your search.</h1>
 		</c:if>
 		<c:forEach var="post" items="${searchResults}">
-			<div class="gallery">
 				<a href="/904px/postDetails/${post.id}"> <img
-					src="/904px/download/${post.imageName}" width="300" height="200">
+					src="/904px/download/${post.imageName}" width="350" style="margin: 20px; padding-left: 50px">
 				</a>
-			</div>
 		</c:forEach>
 	</c:if>
 	<!-- 		

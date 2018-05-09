@@ -1,9 +1,9 @@
-package com.example.controller;
+package com.project.controller;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.springframework.context.annotation.Scope;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,20 +17,21 @@ import com.project.model.user.UserDAO;
 //@Scope("session")
 @Controller
 public class LoginController {
+	
+	@Autowired
+	private UserDAO userDAO;
 
 	@RequestMapping(value="/login",method = RequestMethod.GET)
 	public String load(Model model) {
 		return "login";
-	}	
+	}
 	
 	@RequestMapping(value="/login",method=RequestMethod.POST)
 	public String login(HttpServletRequest request){
 		String username=request.getParameter("username");
 		String password=request.getParameter("pass");
-		
-		UserDAO dao= UserDAO.getInstance();
 		try {
-			int id=dao.login(username, password);
+			int id=userDAO.login(username, password);
 		  	HttpSession session=request.getSession();
 			session.setAttribute("user_id", id);
 			session.setMaxInactiveInterval(1000);

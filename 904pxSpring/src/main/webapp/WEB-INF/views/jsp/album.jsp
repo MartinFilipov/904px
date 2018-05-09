@@ -1,9 +1,9 @@
 <%@include file="header.jsp"%>
 <h1>Album name: ${album.name}</h1>
 <c:forEach var="post" items="${posts}">
-	<div class="gallery">
+<div>
 		<a href="/904px/postDetails/${post.id}"> <img
-			src="/904px/download/${post.imageName}" width="300" height="200">
+			src="/904px/download/${post.imageName}" width="350" style="margin: 20px; padding-left: 50px">
 		</a>
 		<c:if test="${not empty sessionScope.user_id}">
 			<c:if test="${sessionScope.user_id==albumCreatorID}">
@@ -12,7 +12,7 @@
 				</a>
 			</c:if>
 		</c:if>
-	</div>
+</div>
 </c:forEach>
 </body>
 </html>

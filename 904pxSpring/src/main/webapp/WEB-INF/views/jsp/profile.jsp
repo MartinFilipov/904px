@@ -23,15 +23,15 @@
 		<h1>Email: ${email}</h1>
 	</c:if>
 
-	<c:if test="${profilePictureURL != ''}">
-		<img style="display: block;" src="${profilePictureURL }" width="350" float:right>
+
+	<c:if test="${profilePictureName != '' && not empty profilePictureName }">
+		<img style="display: block;" src="/904px/download/${profilePictureName}" width="350" float:right>
 	</c:if>
 
-	<c:if test="${coverPhotoURL != ''}">
-		<img style="display: block;" src="${coverPhotoURL }" width="350">
+	<c:if test="${coverPhotoName != '' && not empty coverPhotoName }">
+		<img style="display: block;" src="/904px/download/${coverPhotoName}" width="350">
 	</c:if>
 
-	<h1>Affection: ${affection }</h1>
 	<h1>Photo views: ${photoViews }</h1>
 	<div class="col-md-4">
 			<form action="/904px/addAlbum" method="post">

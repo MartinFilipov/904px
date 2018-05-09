@@ -33,6 +33,7 @@ public class Post {
 	private LocalDate dateUploaded;
 	private int views;
 	private String imageName;
+	private double rating;
 //	private List<Comment> comments;
 
 	private Post(Builder builder) {
@@ -49,6 +50,7 @@ public class Post {
 		this.likes = builder.likes;
 		this.dateUploaded = builder.dateUploaded;
 		this.views = builder.views;
+		this.rating = builder.rating;
 //		this.comments = new ArrayList<Comment>();
 	}
 
@@ -81,6 +83,7 @@ public class Post {
 		private int likes = 0;
 		private LocalDate dateUploaded = LocalDate.now();
 		private int views = 0;
+		private double rating = 0;
 
 		public Builder(String imageURL) { 
 			this.imageURL = imageURL == null ? "" : imageURL;
@@ -90,6 +93,13 @@ public class Post {
 				System.out.println("Error extracting data from image");
 				this.imageCharacteristics = new ImageCharacteristics("", "", "", "", "");
 			}
+		}
+		
+		public Builder rating(double rating) {
+			if (rating > 0 && rating < 100) {
+				this.rating = rating;
+			}
+			return this;
 		}
 		
 		public Builder views(int views) {
@@ -197,7 +207,9 @@ public class Post {
 		}
 	}
 	
-	
+	public double getRating() {
+		return rating;
+	}
 
 	public String getImageName() {
 		return imageName;

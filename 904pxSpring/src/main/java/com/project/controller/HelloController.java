@@ -1,10 +1,11 @@
-package com.example.controller;
+package com.project.controller;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,16 +18,20 @@ import com.project.model.post.PostException;
 @Controller
 @RequestMapping(value="/index")
 public class HelloController {
+	
+	@Autowired
+	private PostDAO postDAO;
 
+
+	
 	@RequestMapping()
 	public String sayHello(HttpServletRequest request, Model model) {
 		List<Post> posts=new ArrayList<>();
-		PostDAO dao=PostDAO.getInstance();
 		if (request.getSession().getAttribute("user_id") != null) {
-			posts.addAll(dao.getAllFollowedUserPostsByUserID((int)request.getSession().getAttribute("user_id")));
+			posts.addAll(postDAO.getAllFollowedUserPostsByUserID((int)request.getSession().getAttribute("user_id")));
 		}else{
 			try {
-				posts.addAll(dao.getFreshPosts());
+				posts.addAll(postDAO.getFreshPosts());
 			} catch (PostException e) {
 				System.out.println("Something went wrong while getting fresh posts");
 				e.printStackTrace();

@@ -1,7 +1,8 @@
-package com.example.controller;
+package com.project.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,7 +12,8 @@ import com.project.model.user.UserDAO;
 
 @Controller
 public class RegisterController {
-
+	@Autowired
+	private UserDAO userDAO;
 	
 	@RequestMapping(value="/register",method = RequestMethod.GET)
 	public String loadRegisterPage(Model model) {
@@ -24,8 +26,7 @@ public class RegisterController {
 		String password=request.getParameter("password");
 		String email=request.getParameter("email");
 		
-		UserDAO dao= UserDAO.getInstance();
-		if(!dao.register(username, password, email)){
+		if(userDAO.register(username, password, email) == 0){
 			return "register";
 		}
 		

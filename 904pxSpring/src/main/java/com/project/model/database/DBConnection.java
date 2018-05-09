@@ -7,6 +7,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Scanner;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public final class DBConnection {
 
 	private static String DB_HOST;
@@ -19,9 +22,8 @@ public final class DBConnection {
 	private static final String[] dbProperties = { DB_HOST, DB_USER, DB_PASS, DB_PORT, DB_SCHEMA, DB_OPTIONS };
 
 	private final Connection connection;
-	private static DBConnection instance;
 
-	private DBConnection() throws ClassNotFoundException, SQLException {
+	public DBConnection() throws ClassNotFoundException, SQLException {
 		Class.forName("com.mysql.jdbc.Driver");
 
 		loadConnectionProperties();
@@ -57,15 +59,6 @@ public final class DBConnection {
 
 	public Connection getConnection() {
 		return connection;
-	}
-
-	public static DBConnection getInstance() throws ClassNotFoundException, SQLException {
-		synchronized (DBConnection.class) {
-			if (instance == null) {
-				instance = new DBConnection();
-			}
-		}
-		return instance;
 	}
 
 }

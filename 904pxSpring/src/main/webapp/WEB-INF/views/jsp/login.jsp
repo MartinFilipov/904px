@@ -100,12 +100,13 @@
 				style="background-image: url('images/bg-01.jpg');">
 				<div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
 					<form class="login100-form validate-form flex-sb flex-w">
-						<span class="login100-form-title p-b-53"> Sign In With </span> <a
+						<span class="login100-form-title p-b-53"> Sign In</span>
+						<!--   <a
 							href="#" class="btn-face m-b-20"> Facebook </a> <a href="#"
-							class="btn-google m-b-20"> <!--  <img src="login/images/icons/icon-google.png" alt="GOOGLE"> -->
+							class="btn-google m-b-20">
 							Google
 						</a>
-
+						-->
 						<div class="p-t-31 p-b-9">
 							<span class="txt1"> Username </span>
 						</div>
@@ -135,12 +136,6 @@
 					</div>
 		</form>
 	</div>
-	</div>
-	</div>
-	<%
-		// request.getSession().setAttribute("username", "To be inserted!");
-		//response.sendRedirect("./");
-	%>
 
 	<div id="dropDownSelect1"></div>
 

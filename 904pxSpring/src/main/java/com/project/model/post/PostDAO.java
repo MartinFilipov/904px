@@ -1,27 +1,25 @@
 package com.project.model.post;
 
-import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.project.model.database.DBConnection;
 import com.project.model.imageCharacteristics.ImageCharacteristics;
 import com.project.model.user.UserDAO;
 
+@Component
 public class PostDAO {
 	private static final int INVALID_ID = 0;
 	private static final int KEY_COLUMN_ID = 1;
@@ -33,10 +31,12 @@ public class PostDAO {
 	private static final String DELETE_CAMERA_FROM_DATABASE = "DELETE FROM cameras WHERE camera_id = ?";
 	private static final String ADD_CAMERA_MODEL_TO_DATABASE = "INSERT INTO cameras(model) VALUES(?);";
 	private static final String ADD_LOCATION_TO_DATABASAE = "INSERT INTO locations(city, country) VALUES(?,?);";
-	private static final String POST_DATA = "SELECT p.image_url, p.description, p.nsfw, p.title,p.views, p.date_uploaded, ";
+	private static final String POST_DATA = "SELECT p.image_url, p.description, p.nsfw, p.title, p.date_uploaded, p.views, p.rating, ";
 	private static final String LOCATION_DATA = "l.city, l.country, ";
 	private static final String IMAGE_CHARACTERISTICS_DATA = "i.date_taken, i.exposure_time, i.f_number, i.focal_length, i.iso_speed_ratings, ";
-	private static final String GET_POST_BY_ID = POST_DATA + LOCATION_DATA + IMAGE_CHARACTERISTICS_DATA
+	private static final String POST_LIKES =
+			"(SELECT COUNT(*) FROM posts_has_likes phs WHERE phs.post_id = p.post_id) AS likes ";
+	private static final String GET_POST_BY_ID = POST_DATA + POST_LIKES + ", " + LOCATION_DATA + IMAGE_CHARACTERISTICS_DATA
 			+ "c.model, cat.category_name " + "FROM POSTS p "
 			+ "JOIN categories cat ON cat.category_id = p.category_id "
 			+ "JOIN locations l ON l.location_id = p.location_id "
@@ -53,31 +53,36 @@ public class PostDAO {
 	private static final String GET_FRESH_POST_IDS = "SELECT post_id FROM posts ORDER BY post_id desc;";
 	private static final String GET_POST_CREATOR = "select u.username from users u JOIN posts p on u.user_id=p.user_id where p.post_id=?;";
 	private static final String SEARCH_FOR_POSTS_BY_TITLE_OR_CATEGORY = "select p.post_id,p.title,c.category_name from posts p join categories c on p.category_id=c.category_id where p.title like ? or c.category_name like ?;";
+	private static final String SAVE_USER_HAS_SEEN_POST = "INSERT INTO posts_has_views(post_id, user_id) VALUES(?,?);";
+	private static final String INCREASE_POST_VIEWS_BY_ID = "UPDATE posts SET views = views + 1 WHERE post_id = ?;";
+	private static final String GET_POPULAR_POST_IDS = "SELECT post_id FROM posts ORDER BY rating DESC;";
+	private static final String INCREASE_POST_LIKES_BY_ID = 
+			"INSERT INTO posts_has_likes(post_id, user_id) VALUES(?,?);";
+	private static final String DECREASE_POST_LIKES_BY_ID = 
+			"DELETE FROM posts_has_likes WHERE post_id = ? AND user_id = ?;";
+	private static final String CHECK_IF_USER_HAS_LIKED_POST = 
+			"SELECT * FROM posts_has_likes WHERE post_id = ? AND user_id = ?;";
+	private static final String CHECK_IF_USER_HAS_SEEN_POST = 
+			"SELECT * FROM posts_has_views WHERE post_id = ? AND user_id = ?";
+	private static final String CLEAN_USERS_VIEWED_POSTS = 
+			"TRUNCATE posts_has_views;";
+	private static final String GET_ALL_POST_VIEWS_AND_LIKES = 
+			"SELECT p.post_id, p.views, "
+					+ POST_LIKES
+					+ "FROM posts p WHERE p.post_id IN (SELECT po.post_id FROM posts po);";
 	private static final int CAMERA_EXISTS = 1;
-	private static PostDAO instance;
-	private Connection connection;
-
-	private PostDAO() {
-		try {
-			connection = DBConnection.getInstance().getConnection();
-
-		} catch (ClassNotFoundException e) {
-			System.out.println("Missing database connection driver");
-		} catch (SQLException e) {
-			System.out.println("Something went wrong with the databse");
-		}
-	}
-
-	public static PostDAO getInstance() {
-		if (instance == null) {
-			instance = new PostDAO();
-		}
-		return instance;
-	}
+	private static final String UPDATE_POST_RATING_BY_ID = 
+			"UPDATE posts SET rating = ? WHERE post_id = ?;";
+	
+	@Autowired
+	private DBConnection database;
+	
+	@Autowired
+	private UserDAO userDAO;
 
 	private int selectCameraModel(String model) {
 		try {
-			PreparedStatement st = connection.prepareStatement(SELECT_CAMERA_MODEL_FROM_DATABASE);
+			PreparedStatement st = database.getConnection().prepareStatement(SELECT_CAMERA_MODEL_FROM_DATABASE);
 			st.setString(1, model);
 
 			ResultSet set = st.executeQuery();
@@ -93,7 +98,7 @@ public class PostDAO {
 
 	private int addCameraModel(String model) {
 		try {
-			PreparedStatement addCameraModelStatement = connection.prepareStatement(ADD_CAMERA_MODEL_TO_DATABASE,
+			PreparedStatement addCameraModelStatement = database.getConnection().prepareStatement(ADD_CAMERA_MODEL_TO_DATABASE,
 					PreparedStatement.RETURN_GENERATED_KEYS);
 
 			addCameraModelStatement.setString(1, model);
@@ -114,7 +119,7 @@ public class PostDAO {
 		int cameraId = 0;
 
 		try {
-			PreparedStatement checkCameraStatement = connection.prepareStatement(CHECK_FOR_CAMERA_MODEL_IN_DATABASE);
+			PreparedStatement checkCameraStatement = database.getConnection().prepareStatement(CHECK_FOR_CAMERA_MODEL_IN_DATABASE);
 			checkCameraStatement.setString(1, model);
 			ResultSet set = checkCameraStatement.executeQuery();
 			if (set.next()) {
@@ -145,9 +150,9 @@ public class PostDAO {
 		String exposureTime = imageCharacteristics.getExposureTime();
 		String isoSpeedRatings = imageCharacteristics.getIsoSpeedRatings();
 		String dateTaken = imageCharacteristics.getDateTaken();
-
+		
 		try {
-			PreparedStatement addImageCharacteristicsStatement = connection
+			PreparedStatement addImageCharacteristicsStatement = database.getConnection()
 					.prepareStatement(ADD_IMAGE_CHARACTERISTICS_TO_DATABASE, PreparedStatement.RETURN_GENERATED_KEYS);
 
 			addImageCharacteristicsStatement.setString(1, focalLength);
@@ -174,7 +179,7 @@ public class PostDAO {
 
 	private int addLocation(String city, String country) {
 		try {
-			PreparedStatement addLocationStatement = connection.prepareStatement(ADD_LOCATION_TO_DATABASAE,
+			PreparedStatement addLocationStatement = database.getConnection().prepareStatement(ADD_LOCATION_TO_DATABASAE,
 					PreparedStatement.RETURN_GENERATED_KEYS);
 			addLocationStatement.setString(1, city);
 			addLocationStatement.setString(2, country);
@@ -191,7 +196,7 @@ public class PostDAO {
 
 	private int selectCategory(String category) {
 		try {
-			PreparedStatement selectCategoryStatement = connection.prepareStatement(SELECT_CATEGORY_FROM_DATABASE);
+			PreparedStatement selectCategoryStatement = database.getConnection().prepareStatement(SELECT_CATEGORY_FROM_DATABASE);
 			selectCategoryStatement.setString(1, category);
 			ResultSet set = selectCategoryStatement.executeQuery();
 			if (set.next()) {
@@ -235,7 +240,7 @@ public class PostDAO {
 		}
 
 		try {
-			PreparedStatement addPostStatement = connection.prepareStatement(ADD_POST_TO_DATABASE,
+			PreparedStatement addPostStatement = database.getConnection().prepareStatement(ADD_POST_TO_DATABASE,
 					PreparedStatement.RETURN_GENERATED_KEYS);
 
 			addPostStatement.setString(1, imageURL);
@@ -272,7 +277,7 @@ public class PostDAO {
 	private boolean deleteCameraModelFromDatabaseById(int cameraId) {
 		PreparedStatement deleteCameraStatement;
 		try {
-			deleteCameraStatement = connection.prepareStatement(DELETE_CAMERA_FROM_DATABASE);
+			deleteCameraStatement = database.getConnection().prepareStatement(DELETE_CAMERA_FROM_DATABASE);
 
 			deleteCameraStatement.setInt(1, cameraId);
 
@@ -287,7 +292,7 @@ public class PostDAO {
 
 	private boolean deleteImageCharacteristicsFromDatabaseById(int imageCharacteristicsId) {
 		try {
-			PreparedStatement getCameraId = connection.prepareStatement(
+			PreparedStatement getCameraId = database.getConnection().prepareStatement(
 					"select camera_id from image_characteristics where image_characteristics_id = ?;");
 
 			getCameraId.setInt(1, imageCharacteristicsId);
@@ -296,7 +301,7 @@ public class PostDAO {
 			if (set.next()) {
 				int cameraId = set.getInt(1);
 
-				PreparedStatement st = connection
+				PreparedStatement st = database.getConnection()
 						.prepareStatement("DELETE FROM image_characteristics where image_characteristics_id = ?;");
 				st.setInt(1, imageCharacteristicsId);
 				st.executeUpdate();
@@ -311,7 +316,7 @@ public class PostDAO {
 
 	public Post getPostById(int id) throws PostException {
 		try {
-			PreparedStatement st = connection.prepareStatement(GET_POST_BY_ID);
+			PreparedStatement st = database.getConnection().prepareStatement(GET_POST_BY_ID);
 			st.setInt(1, id);
 
 			ResultSet set = st.executeQuery();
@@ -325,9 +330,10 @@ public class PostDAO {
 				String country = set.getString("country");
 				boolean nsfw = set.getString("nsfw").equals("T");
 				System.out.println("Not safe for work: " + nsfw);
-				// int likes = set.getInt("likes");
+				int likes = set.getInt("likes");
 				int views = set.getInt("views");
 				LocalDate dateUploaded = set.getDate("date_uploaded").toLocalDate();
+				double rating = set.getDouble("rating");
 
 				String dateTaken = set.getString("date_taken");
 				String exposureTime = set.getString("exposure_time");
@@ -337,7 +343,10 @@ public class PostDAO {
 				String cameraModel = set.getString("model");
 
 				Post post = new Post.Builder(imageURL).title(title).category(category).id(id).description(description)
-						.location(city, country).nsfw(nsfw).views(views).dateUploaded(dateUploaded).build();
+						.rating(rating)
+						.likes(likes)
+						.location(city, country).nsfw(nsfw).views(views).dateUploaded(dateUploaded)
+						.build();
 
 				return post;
 			} else {
@@ -354,7 +363,7 @@ public class PostDAO {
 
 	public Collection<Post> getUserUploads(int userId) {
 		try {
-			PreparedStatement getUserUploadsStatement = connection.prepareStatement(GET_ALL_USER_UPLOAD_IDS);
+			PreparedStatement getUserUploadsStatement = database.getConnection().prepareStatement(GET_ALL_USER_UPLOAD_IDS);
 			getUserUploadsStatement.setInt(1, userId);
 
 			ResultSet set = getUserUploadsStatement.executeQuery();
@@ -387,8 +396,7 @@ public class PostDAO {
 
 	public List<Post> getAllFollowedUserPostsByUserID(int user_id) {
 		List<Post> feed = new ArrayList<>();
-		UserDAO dao = UserDAO.getInstance();
-		List<Integer> followedIds = dao.getUserIdsOfFollowedUsers(user_id);
+		List<Integer> followedIds = userDAO.getUserIdsOfFollowedUsers(user_id);
 		for (Integer followedUserID : followedIds) {
 			feed.addAll(getUserUploads(followedUserID));
 		}
@@ -398,7 +406,7 @@ public class PostDAO {
 	public List<Post> searchForPosts(String search) {
 		List<Post> results = new ArrayList<>();
 		try {
-			PreparedStatement statement = connection.prepareStatement(SEARCH_FOR_POSTS_BY_TITLE_OR_CATEGORY);
+			PreparedStatement statement = database.getConnection().prepareStatement(SEARCH_FOR_POSTS_BY_TITLE_OR_CATEGORY);
 			statement.setString(1, '%'+search+'%');
 			statement.setString(2, '%'+search+'%');
 			ResultSet set = statement.executeQuery();
@@ -427,7 +435,7 @@ public class PostDAO {
 
 	public boolean addComment(int userID, int postID, String comment) {
 		try {
-			PreparedStatement statement = connection.prepareStatement(ADD_COMMENT_TO_DATABASE);
+			PreparedStatement statement = database.getConnection().prepareStatement(ADD_COMMENT_TO_DATABASE);
 			statement.setString(1, comment);
 			statement.setInt(2, postID);
 			statement.setInt(3, userID);
@@ -441,7 +449,7 @@ public class PostDAO {
 
 	public Comment getLastAddedCommentByPostID(int postID) throws PostException {
 		try {
-			PreparedStatement statement = connection.prepareStatement(GET_LAST_ADDED_COMMENT_BY_POST_ID);
+			PreparedStatement statement = database.getConnection().prepareStatement(GET_LAST_ADDED_COMMENT_BY_POST_ID);
 			statement.setInt(1, postID);
 			ResultSet set = statement.executeQuery();
 			Comment comment = null;
@@ -460,7 +468,7 @@ public class PostDAO {
 
 	public List<Comment> getAllComments(int postID) throws PostException {
 		try {
-			PreparedStatement statement = connection.prepareStatement(GET_ALL_COMMENTS_FROM_DATABASE);
+			PreparedStatement statement = database.getConnection().prepareStatement(GET_ALL_COMMENTS_FROM_DATABASE);
 			statement.setInt(1, postID);
 			ResultSet set = statement.executeQuery();
 			List<Comment> comments = new ArrayList<>();
@@ -479,7 +487,7 @@ public class PostDAO {
 	public String getPostCreator(int postId) throws PostException {
 		String username = null;
 		try {
-			PreparedStatement statement = connection.prepareStatement(GET_POST_CREATOR);
+			PreparedStatement statement = database.getConnection().prepareStatement(GET_POST_CREATOR);
 			statement.setInt(1, postId);
 			ResultSet set = statement.executeQuery();
 			if (set.next()) {
@@ -492,20 +500,10 @@ public class PostDAO {
 		}
 	}
 
-	public void increasePostViewsById(int postId) {
-		try {
-			PreparedStatement st = connection.prepareStatement(INCREMENT_POST_VIEWS_BY_ID);
-			st.setInt(1, postId);
-			st.executeUpdate();
-		} catch (SQLException e) {
-			System.out.println("--increasePostViewsById-- SQL syntax error");
-		}
-
-	}
 
 	public void increaseLikesOfComment(int commentId, int user_id) {
 		try {
-			PreparedStatement statement = connection.prepareStatement(INCREASE_LIKES_OF_COMMENT_BY_COMMENT_ID);
+			PreparedStatement statement = database.getConnection().prepareStatement(INCREASE_LIKES_OF_COMMENT_BY_COMMENT_ID);
 			statement.setInt(1, commentId);
 			statement.setInt(2, user_id);
 			statement.executeUpdate();
@@ -516,7 +514,7 @@ public class PostDAO {
 
 	public void decreaseLikesOfComment(int commentId, int user_id) {
 		try {
-			PreparedStatement statement = connection.prepareStatement(DECREASE_LIKES_OF_COMMENT_BY_COMMENT_ID);
+			PreparedStatement statement = database.getConnection().prepareStatement(DECREASE_LIKES_OF_COMMENT_BY_COMMENT_ID);
 			statement.setInt(1, commentId);
 			statement.setInt(2, user_id);
 			statement.executeUpdate();
@@ -527,7 +525,7 @@ public class PostDAO {
 
 	public boolean checkIfCommentIsLikedByUser(int commentId, int user_id) {
 		try {
-			PreparedStatement statement = connection.prepareStatement(GET_LIKES_OF_COMMENT_BY_COMMENT_AND_USER_ID);
+			PreparedStatement statement = database.getConnection().prepareStatement(GET_LIKES_OF_COMMENT_BY_COMMENT_AND_USER_ID);
 			statement.setInt(1, commentId);
 			statement.setInt(2, user_id);
 			ResultSet set = statement.executeQuery();
@@ -543,9 +541,10 @@ public class PostDAO {
 	public List<Post> getFreshPosts() throws PostException {
 		List<Post> posts = new ArrayList<>();
 		try {
-			PreparedStatement statement = connection.prepareStatement(GET_FRESH_POST_IDS);
-			ResultSet set = statement.executeQuery();
-			while (set.next()) {
+
+			Statement statement = database.getConnection().createStatement();
+			ResultSet set = statement.executeQuery(GET_FRESH_POST_IDS);
+			while(set.next()){
 				posts.add(getPostById(set.getInt("post_id")));
 			}
 		} catch (SQLException e) {
@@ -553,25 +552,188 @@ public class PostDAO {
 		}
 		return posts;
 	}
-
-	private void loadAllCategoriesToDatabase() {
-		List<PostCategory> categories = PostDAO.getInstance().getAllCategories();
-
-		for (PostCategory cat : categories) {
-			try {
-				PreparedStatement st = connection.prepareStatement("INSERT INTO categories(category_name) VALUES(?);");
-				st.setString(1, cat.toString());
-				st.executeUpdate();
-
-			} catch (SQLException e) {
-				System.out.println("Inserting failed");
+	
+	public List<Post> getPopularPosts() throws PostException {
+		List<Post> posts = new ArrayList<>();
+		
+		try {
+			Statement st = database.getConnection().createStatement();
+			ResultSet set = st.executeQuery(GET_POPULAR_POST_IDS);
+			
+			while (set.next()) {
+				int postId = set.getInt(KEY_COLUMN_ID);
+				Post post = getPostById(postId);
+				posts.add(post);
 			}
-
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Could not get popular posts");
+		}
+		
+		return posts;
+	}
+	
+	public void increasePostLikesById(int postId, int userId) throws PostException {
+		try {
+			PreparedStatement increasePostLikesByIdStatement = database.getConnection().prepareStatement(INCREASE_POST_LIKES_BY_ID);
+			increasePostLikesByIdStatement.setInt(1, postId);
+			increasePostLikesByIdStatement.setInt(2, userId);
+			
+			increasePostLikesByIdStatement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new PostException("Could not increase likes", e);
+		}
+	}
+	
+	public void decreasePostLikesById(int postId, int userId) throws PostException {
+		try {
+			PreparedStatement decreasePostLikesByIdStatement = database.getConnection().prepareStatement(DECREASE_POST_LIKES_BY_ID);
+			decreasePostLikesByIdStatement.setInt(1, postId);
+			decreasePostLikesByIdStatement.setInt(2, userId);
+			
+			decreasePostLikesByIdStatement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new PostException("Could not decrease likes", e);
+		}
+	}
+	
+	public void increasePostViewsById(int postId, int userId) throws PostException {
+		try {
+			
+			database.getConnection().setAutoCommit(false);
+			
+			System.out.println("Before saving viewed post");
+			
+			PreparedStatement saveUserHasSeenPostStatement = database.getConnection().prepareStatement(SAVE_USER_HAS_SEEN_POST);
+			saveUserHasSeenPostStatement.setInt(1, postId);
+			saveUserHasSeenPostStatement.setInt(2, userId);
+			
+			System.out.println("Before update");
+			
+			saveUserHasSeenPostStatement.executeUpdate();
+			
+			System.out.println("After saving viewed post");
+			
+			PreparedStatement increasePostViewsByIdStatement = database.getConnection().prepareStatement(INCREASE_POST_VIEWS_BY_ID);
+			increasePostViewsByIdStatement.setInt(1, postId);
+			increasePostViewsByIdStatement.executeUpdate();
+			
+			System.out.println("After increasing post views by 1");
+			
+			database.getConnection().commit();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				database.getConnection().rollback();
+			} catch (SQLException e1) {
+				System.out.println("Could not rollback");
+				e1.printStackTrace();
+			}
+			throw new PostException("Could not increase post views", e);
+		} finally {
+			try {
+				database.getConnection().setAutoCommit(true);
+			} catch (SQLException e) {
+				System.out.println("Could not set auto commit to TRUE");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public boolean checkIfUserHasLikedPost(int postId, int userId) throws PostException {
+		try {
+			PreparedStatement checkIfUserHasLikedPostStatement = database.getConnection().prepareStatement(CHECK_IF_USER_HAS_LIKED_POST);
+			checkIfUserHasLikedPostStatement.setInt(1, postId);
+			checkIfUserHasLikedPostStatement.setInt(2, userId);
+			
+			ResultSet set = checkIfUserHasLikedPostStatement.executeQuery();
+			
+			return set.next();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new PostException("Could not check if user has liked post", e);
+		}
+	}
+	
+	public boolean checkIfUserHasSeenPost(int postId, int userId) throws PostException {
+		try {
+			PreparedStatement checkIfUserHasSeenPostStatement = database.getConnection().prepareStatement(CHECK_IF_USER_HAS_SEEN_POST);
+			checkIfUserHasSeenPostStatement.setInt(1, postId);
+			checkIfUserHasSeenPostStatement.setInt(2, userId);
+			
+			ResultSet set = checkIfUserHasSeenPostStatement.executeQuery();
+			
+			return set.next();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new PostException("Something went wrong with the database", e);
+		}
+		
+	}
+	
+	public void cleanViewsTable() throws PostException {
+		try {
+			Statement st = database.getConnection().createStatement();
+			st.executeUpdate(CLEAN_USERS_VIEWED_POSTS);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new PostException("Could not clean views table");
+		}
+	}
+	
+	private double calculatePartialRating(double number, double percentage) {
+		return (1.0 - (1.0 / (1.0 + number)))*percentage;
+	}
+	
+	public void calculateRating() throws PostException {
+		try {
+			Statement st = database.getConnection().createStatement();
+			ResultSet set = st.executeQuery(GET_ALL_POST_VIEWS_AND_LIKES);
+			
+			while (set.next()) {
+				int postId = set.getInt("post_id");
+				int postViews = set.getInt("views");
+				int postLikes = set.getInt("likes");
+				
+				PreparedStatement updatePostRatingByIdStatement = database.getConnection().prepareStatement(UPDATE_POST_RATING_BY_ID);
+				double viewsPartOfRating = calculatePartialRating(postViews, 60);
+				double likesPartOfRating = calculatePartialRating(postLikes, 40);
+				
+				updatePostRatingByIdStatement.setDouble(1, viewsPartOfRating + likesPartOfRating);
+				updatePostRatingByIdStatement.setInt(2, postId);
+				
+				updatePostRatingByIdStatement.executeUpdate();
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new PostException("Could not calculate rating", e);
 		}
 	}
 
-	public static void main(String[] args) {
-		PostDAO.getInstance().loadAllCategoriesToDatabase();
-	}
+//	private void loadAllCategoriesToDatabase() {
+//		List<PostCategory> categories = PostDAO.getInstance().getAllCategories();
+//
+//		for (PostCategory cat : categories) {
+//			try {
+//				PreparedStatement st = connection.prepareStatement("INSERT INTO categories(category_name) VALUES(?);");
+//				st.setString(1, cat.toString());
+//				st.executeUpdate();
+//
+//			} catch (SQLException e) {
+//				System.out.println("Inserting failed");
+//			}
+//
+//		}
+//	}
+//
+//	public static void main(String[] args) {
+//		
+//		PostDAO.getInstance().loadAllCategoriesToDatabase();
+//	}
 
 }

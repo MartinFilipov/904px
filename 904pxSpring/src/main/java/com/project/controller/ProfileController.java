@@ -1,6 +1,9 @@
-package com.example.controller;
+package com.project.controller;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,14 +11,16 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.project.model.exceptions.UserException;
-import com.project.model.post.Comment;
 import com.project.model.post.Post;
 import com.project.model.post.PostDAO;
 import com.project.model.post.PostException;
@@ -25,6 +30,12 @@ import com.project.model.user.UserDAO;
 
 @Controller
 public class ProfileController {
+	@Autowired
+	private UserDAO userDAO;
+	@Autowired
+	private PostDAO postDAO;
+
+	private static final String FILE_PATH = "E:\\Uploads\\";
 
 	@RequestMapping(method = RequestMethod.GET, value = "/editProfile")
 	public String getProfileEdit(HttpServletRequest request) {
@@ -42,10 +53,9 @@ public class ProfileController {
 		String albumName = request.getParameter("albumName");
 		if (albumName.trim().length() > 0) {
 			int user_id = (int) request.getSession(false).getAttribute("user_id");
-			UserDAO dao = UserDAO.getInstance();
 			try {
-				if (!dao.albumExists(user_id, albumName)) {
-					dao.addAlbum(user_id, albumName);
+				if (!userDAO.albumExists(user_id, albumName)) {
+					userDAO.addAlbum(user_id, albumName);
 				}
 			} catch (UserException e) {
 				return "pageNotFound";
@@ -55,15 +65,16 @@ public class ProfileController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/editor")
-	public String editProfile(HttpServletRequest request) {
+	public String editProfile(Model model, HttpServletRequest request, @RequestParam("profilePicture") MultipartFile profilePicture,
+			@RequestParam("coverPhoto") MultipartFile coverPhoto) {
 		if (request.getSession().getAttribute("user_id") == null) {
 			return "login";
 		}
+
 		int userID = (int) request.getSession(false).getAttribute("user_id");
-		UserDAO dao = UserDAO.getInstance();
 
 		try {
-			User user = dao.getUser(userID);
+			User user = userDAO.getUser(userID);
 			String firstName = request.getParameter("firstName");
 			if (firstName.equals("")) {
 				firstName = user.getFirstName();
@@ -72,34 +83,75 @@ public class ProfileController {
 			if (lastName.equals("")) {
 				lastName = user.getLastName();
 			}
-			String profilePictureURL = request.getParameter("profilePictureURL");
-			if (profilePictureURL.equals("")) {
-				profilePictureURL = user.getProfilePictureURL();
+
+			String profilePictureName = profilePicture.getOriginalFilename();
+			String fullProfilePicturePath = "";
+
+			if (profilePictureName != "") {
+
+				String username = userDAO.getUsername((int) request.getSession(false).getAttribute("user_id"));
+				
+				File usernameFolder = new File(FILE_PATH + username);
+				
+				if (!usernameFolder.exists()) {
+					usernameFolder.mkdir();
+				}
+				
+				fullProfilePicturePath = FILE_PATH + username + File.separator + profilePictureName;
+
+				File savedProfilePicture = new File(fullProfilePicturePath);
+
+				Files.copy(profilePicture.getInputStream(), savedProfilePicture.toPath(),
+						StandardCopyOption.REPLACE_EXISTING);
+				
+
 			}
-			String coverPhotoURL = request.getParameter("coverPhotoURL");
-			if (coverPhotoURL.equals("")) {
-				coverPhotoURL = user.getCoverPhotoURL();
+			model.addAttribute("profilePictureName", profilePictureName);
+
+			String coverPhotoName = profilePicture.getOriginalFilename();
+			String fullCoverPhotoPath = "";
+
+			if (coverPhotoName != "") {
+
+				String username = userDAO.getUsername((int) request.getSession(false).getAttribute("user_id"));
+				
+				File usernameFolder = new File(FILE_PATH + username);
+				
+				if (!usernameFolder.exists()) {
+					usernameFolder.mkdir();
+				}
+				
+				fullCoverPhotoPath = FILE_PATH + username + File.separator + coverPhotoName;
+
+				File savedCoverPhoto = new File(fullCoverPhotoPath);
+
+				Files.copy(coverPhoto.getInputStream(), savedCoverPhoto.toPath(),
+						StandardCopyOption.REPLACE_EXISTING);
+				
 			}
-			HttpSession session = request.getSession(false);
-			dao.updateUser((int) session.getAttribute("user_id"), firstName, lastName, profilePictureURL,
-					coverPhotoURL);
+			model.addAttribute("coverPhotoName", coverPhotoName);
+			userDAO.updateUser(userID, firstName, lastName, fullProfilePicturePath,
+					fullCoverPhotoPath);
 			return "forward:/profile";
 		} catch (UserException e) {
 			return "forward:/index";
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+		return "forward:/profile";
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/profile/{username}/follow")
 	public String followUser(HttpServletRequest request, @PathVariable String username)
 			throws ServletException, IOException {
+
 		if (request.getSession().getAttribute("user_id") == null) {
 			return "forward:/login";
 		}
-		UserDAO dao = UserDAO.getInstance();
 		int user_id = (int) request.getSession(false).getAttribute("user_id");
 		try {
-			int followed_id = dao.getUserIDByUsername(username);
-			dao.followUser(user_id, followed_id);
+			int followed_id = userDAO.getUserIDByUsername(username);
+			userDAO.followUser(user_id, followed_id);
 			return "forward:/profile/" + username;
 		} catch (UserException e) {
 			System.out.println("\nProfileController:\nCouldn't follow user\n");
@@ -113,11 +165,10 @@ public class ProfileController {
 		if (request.getSession().getAttribute("user_id") == null) {
 			return "login";
 		}
-		UserDAO dao = UserDAO.getInstance();
 		int user_id = (int) request.getSession(false).getAttribute("user_id");
 		try {
-			int followed_id = dao.getUserIDByUsername(username);
-			dao.unfollowUser(user_id, followed_id);
+			int followed_id = userDAO.getUserIDByUsername(username);
+			userDAO.unfollowUser(user_id, followed_id);
 			return "forward:/profile/" + username;
 		} catch (UserException e) {
 			System.out.println("\nProfileController:Couldn't follow user");
@@ -131,24 +182,23 @@ public class ProfileController {
 			return "login";
 		}
 		int userID = (int) (request.getSession(false).getAttribute("user_id"));
-		UserDAO dao = UserDAO.getInstance();
 		User user;
 		try {
-			user = dao.getUser(userID);
+			user = userDAO.getUser(userID);
 		} catch (UserException e) {
 			return "forward:/index";
 		}
 		try {
-			List<Album> albums = dao.getAllAlbums(userID);
+			List<Album> albums = userDAO.getAllAlbums(userID);
 			request.setAttribute("albums", albums);
 		} catch (UserException e) {
 			System.out.println("Couldn't get albums from the DB");
 		}
-		List<Integer> followedUserIds = dao.getUserIdsOfFollowedUsers(userID);
+		List<Integer> followedUserIds = userDAO.getUserIdsOfFollowedUsers(userID);
 		List<String> followedUsernames = new ArrayList<>();
 		for (Integer followedID : followedUserIds) {
 			try {
-				followedUsernames.add(dao.getUsername(followedID));
+				followedUsernames.add(userDAO.getUsername(followedID));
 			} catch (UserException e) {
 				System.out.println("Couldn't get followed users");
 			}
@@ -169,19 +219,19 @@ public class ProfileController {
 	public String getUserProfile(HttpServletRequest request, Model model,
 			@PathVariable(value = "username") String username) {
 		try {
-			UserDAO dao = UserDAO.getInstance();
 			if (request.getSession().getAttribute("user_id") != null
-					&& username.equals(dao.getUsername((int) request.getSession(false).getAttribute("user_id")))) {
+					&& username.equals(userDAO.getUsername((int) request.getSession(false).getAttribute("user_id")))) {
 				return "forward:/profile";
 			}
-			User user = dao.getUser(username);
+			User user = userDAO.getUser(username);
 			model.addAttribute("user", user);
-			int profileUserId = dao.getUserIDByUsername(username);
-			List<Album> albums = dao.getAllAlbums(profileUserId);
+			int profileUserId = userDAO.getUserIDByUsername(username);
+			List<Album> albums = userDAO.getAllAlbums(profileUserId);
+
 			model.addAttribute("albums", albums);
 			if (request.getSession().getAttribute("user_id") != null) {
 				int user_id = (int) request.getSession(false).getAttribute("user_id");
-				if (dao.checkUserFollowsUser(user_id, profileUserId)) {
+				if (userDAO.checkUserFollowsUser(user_id, profileUserId)) {
 					model.addAttribute("followed", "yes");
 				}
 			}
@@ -195,16 +245,16 @@ public class ProfileController {
 	@RequestMapping(value = "/profile/album/{id}", method = RequestMethod.GET)
 	public String getPostDetails(HttpServletRequest request, Model model, @PathVariable(value = "id") Integer albumId) {
 		try {
-			List<Integer> postIds = UserDAO.getInstance().getAllPostIdsByAlbumID(albumId);
-			PostDAO dao = PostDAO.getInstance();
+			List<Integer> postIds = userDAO.getAllPostIdsByAlbumID(albumId);
 			List<Post> posts = new ArrayList<>();
 			for (Integer postIdIndex : postIds) {
-				posts.add(dao.getPostById(postIdIndex));
+				posts.add(postDAO.getPostById(postIdIndex));
 			}
-			UserDAO userDao= UserDAO.getInstance();
-			model.addAttribute("albumCreatorID",userDao.getAlbumCreatorID(albumId));
+			
+			model.addAttribute("albumCreatorID",userDAO.getAlbumCreatorID(albumId));
 			model.addAttribute("posts", posts);
-			model.addAttribute("album",userDao.getAlbumByID(albumId));
+			model.addAttribute("album",userDAO.getAlbumByID(albumId));
+
 			return "album";
 		} catch (UserException | PostException e) {
 			System.out.println("Couldn't get all posts by album ID");
@@ -218,16 +268,17 @@ public class ProfileController {
 		if (request.getSession().getAttribute("user_id") == null) {
 			return "forward:/index";
 		}
-		UserDAO.getInstance().addPostToAlbum(postId, albumId);
+		userDAO.addPostToAlbum(postId, albumId);
 		return "forward:/postDetails/" + postId;
 	}
+
 	@RequestMapping(value = "/profile/album/{id}/remove/{postId}", method = RequestMethod.GET)
 	public String removePostFromAlbum(HttpServletRequest request, Model model, @PathVariable(value = "id") Integer albumId,
 			@PathVariable(value = "postId") Integer postId) {
 		if (request.getSession().getAttribute("user_id") == null) {
 			return "forward:/index";
 		}
-		UserDAO.getInstance().removePostFromAlbum(postId, albumId);
+		userDAO.removePostFromAlbum(postId, albumId);
 		return "forward:/profile/album/" + albumId;
 	}
 
