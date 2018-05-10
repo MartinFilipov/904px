@@ -1,6 +1,6 @@
 <%@include file="header.jsp" %>
 
-<img src="/images/pageNotFound.jpg">
+<img src="/904px/images/pageNotFound.jpg">
 
 </body>
 </html>

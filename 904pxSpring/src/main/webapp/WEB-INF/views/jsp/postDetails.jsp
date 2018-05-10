@@ -77,10 +77,9 @@
 	<div class="col-md-4">
 		<div class="card my-4">
 			<p>
-				<b><i>Likes:
-						<div id="post_likes">${post.likes}</div> Views: ${post.views}
-						Rating: ${post.rating}
-				</i></b>
+				Likes: <div id="post_likes">${post.likes}</div>
+				<b><i> Views: ${post.views}</i></b>
+				<b><i>Rating: ${post.rating}</i></b>
 			</p>
 			<c:if test="${not empty sessionScope.user_id}">
 				<c:if test="${liked}">
@@ -249,7 +248,7 @@ function display(data) {
 	$('#newComments').html(newComments+json1);
 }
 </script>
-<script src="/904px/js/like_dislike.js"></script>
+<script src="/904px/js/likeDislike.js"></script>
 
 </body>
 </html>

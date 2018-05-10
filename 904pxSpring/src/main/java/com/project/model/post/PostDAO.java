@@ -49,7 +49,6 @@ public class PostDAO {
 	private static final String INCREASE_LIKES_OF_COMMENT_BY_COMMENT_ID = "INSERT into comments_has_likes (comment_id,user_id) values(?,?);";
 	private static final String DECREASE_LIKES_OF_COMMENT_BY_COMMENT_ID = "DELETE FROM comments_has_likes where comment_id=? and user_id=?;";
 	private static final String GET_LIKES_OF_COMMENT_BY_COMMENT_AND_USER_ID = "select count(*) as liked from comments_has_likes where comment_id=? and user_id=?";
-	private static final String INCREMENT_POST_VIEWS_BY_ID = "UPDATE posts SET views = views + 1 WHERE post_id = ?";
 	private static final String GET_FRESH_POST_IDS = "SELECT post_id FROM posts ORDER BY post_id desc;";
 	private static final String GET_POST_CREATOR = "select u.username from users u JOIN posts p on u.user_id=p.user_id where p.post_id=?;";
 	private static final String SEARCH_FOR_POSTS_BY_TITLE_OR_CATEGORY = "select p.post_id,p.title,c.category_name from posts p join categories c on p.category_id=c.category_id where p.title like ? or c.category_name like ?;";
@@ -228,12 +227,9 @@ public class PostDAO {
 				.location(city, country).nsfw(isNsfw).build();
 
 		String cameraModel = post.getCameraModel();
-		System.out.println("\ncamera model = " + cameraModel);
 		ImageCharacteristics imageCharacteristics = post.getImageCharacteristics();
 
 		int imageCharacteristicsId = addImageCharacteristics(cameraModel, imageCharacteristics);
-
-		System.out.println("imageCharId in addPost = " + imageCharacteristicsId);
 
 		if (imageCharacteristicsId == INVALID_ID) {
 			return INVALID_ID;
@@ -335,12 +331,12 @@ public class PostDAO {
 				LocalDate dateUploaded = set.getDate("date_uploaded").toLocalDate();
 				double rating = set.getDouble("rating");
 
-				String dateTaken = set.getString("date_taken");
-				String exposureTime = set.getString("exposure_time");
-				String fNumber = set.getString("f_number");
-				String focalLength = set.getString("focal_length");
-				String isoSpeedRatings = set.getString("iso_speed_ratings");
-				String cameraModel = set.getString("model");
+//				String dateTaken = set.getString("date_taken");
+//				String exposureTime = set.getString("exposure_time");
+//				String fNumber = set.getString("f_number");
+//				String focalLength = set.getString("focal_length");
+//				String isoSpeedRatings = set.getString("iso_speed_ratings");
+//				String cameraModel = set.getString("model");
 
 				Post post = new Post.Builder(imageURL).title(title).category(category).id(id).description(description)
 						.rating(rating)
@@ -609,18 +605,12 @@ public class PostDAO {
 			PreparedStatement saveUserHasSeenPostStatement = database.getConnection().prepareStatement(SAVE_USER_HAS_SEEN_POST);
 			saveUserHasSeenPostStatement.setInt(1, postId);
 			saveUserHasSeenPostStatement.setInt(2, userId);
-			
-			System.out.println("Before update");
-			
+	
 			saveUserHasSeenPostStatement.executeUpdate();
-			
-			System.out.println("After saving viewed post");
-			
+
 			PreparedStatement increasePostViewsByIdStatement = database.getConnection().prepareStatement(INCREASE_POST_VIEWS_BY_ID);
 			increasePostViewsByIdStatement.setInt(1, postId);
 			increasePostViewsByIdStatement.executeUpdate();
-			
-			System.out.println("After increasing post views by 1");
 			
 			database.getConnection().commit();
 			

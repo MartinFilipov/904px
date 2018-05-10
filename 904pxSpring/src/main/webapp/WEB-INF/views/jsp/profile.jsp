@@ -25,8 +25,10 @@
 
 
 	<c:if test="${profilePictureName != '' && not empty profilePictureName }">
-		<img style="display: block;" src="/904px/download/${profilePictureName}" width="350" float:right>
+		<img style="display: block;" src="/904px/download/${profilePictureName}" width="350">
 	</c:if>
+	
+	<hr/>
 
 	<c:if test="${coverPhotoName != '' && not empty coverPhotoName }">
 		<img style="display: block;" src="/904px/download/${coverPhotoName}" width="350">

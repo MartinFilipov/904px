@@ -27,12 +27,14 @@
 		<h1>Email: ${user.email}</h1>
 	</c:if>
 
-	<c:if test="${user.profilePictureURL != ''}">
-		<img style="display: block;" src="${user.profilePictureURL }" width="350" float:right>
+	<c:if test="${profilePictureName != ''}">
+		<img style="display: block;" src="/904px/download/${profilePictureName}" width="350">
 	</c:if>
 
-	<c:if test="${user.coverPhotoURL != ''}">
-		<img style="display: block;" src="${user.coverPhotoURL }" width="350">
+	<hr/>
+
+	<c:if test="${coverPhotoName != ''}">
+		<img style="display: block;" src="/904px/download/${coverPhotoName }" width="350">
 	</c:if>
 
 </div>

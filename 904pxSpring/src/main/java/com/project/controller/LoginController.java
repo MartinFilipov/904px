@@ -12,9 +12,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.project.model.exceptions.UserException;
 import com.project.model.user.UserDAO;
 
-
-//@RequestMapping(value="/login")
-//@Scope("session")
 @Controller
 public class LoginController {
 	

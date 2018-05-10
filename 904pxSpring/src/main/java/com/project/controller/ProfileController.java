@@ -35,7 +35,7 @@ public class ProfileController {
 	@Autowired
 	private PostDAO postDAO;
 
-	private static final String FILE_PATH = "E:\\Uploads\\";
+	private static final String FILE_PATH = "D:\\Uploads\\";
 
 	@RequestMapping(method = RequestMethod.GET, value = "/editProfile")
 	public String getProfileEdit(HttpServletRequest request) {
@@ -98,17 +98,19 @@ public class ProfileController {
 				}
 				
 				fullProfilePicturePath = FILE_PATH + username + File.separator + profilePictureName;
-
+				
 				File savedProfilePicture = new File(fullProfilePicturePath);
 
 				Files.copy(profilePicture.getInputStream(), savedProfilePicture.toPath(),
 						StandardCopyOption.REPLACE_EXISTING);
 				
-
+			} else {
+				fullProfilePicturePath = user.getProfilePictureURL();
+				profilePictureName = new File(user.getProfilePictureURL()).getName();
 			}
-			model.addAttribute("profilePictureName", profilePictureName);
+			
 
-			String coverPhotoName = profilePicture.getOriginalFilename();
+			String coverPhotoName = coverPhoto.getOriginalFilename();
 			String fullCoverPhotoPath = "";
 
 			if (coverPhotoName != "") {
@@ -128,11 +130,18 @@ public class ProfileController {
 				Files.copy(coverPhoto.getInputStream(), savedCoverPhoto.toPath(),
 						StandardCopyOption.REPLACE_EXISTING);
 				
+			} else {
+				fullCoverPhotoPath = user.getCoverPhotoURL();
+				coverPhotoName = new File(user.getCoverPhotoURL()).getName();
 			}
+			
 			model.addAttribute("coverPhotoName", coverPhotoName);
+			model.addAttribute("profilePictureName", profilePictureName);
 			userDAO.updateUser(userID, firstName, lastName, fullProfilePicturePath,
 					fullCoverPhotoPath);
+			
 			return "forward:/profile";
+			
 		} catch (UserException e) {
 			return "forward:/index";
 		} catch (IOException e) {
@@ -208,10 +217,11 @@ public class ProfileController {
 		request.setAttribute("username", user.getUsername());
 		request.setAttribute("firstName", user.getFirstName());
 		request.setAttribute("lastName", user.getLastName());
-		request.setAttribute("profilePictureURL", user.getProfilePictureURL());
-		request.setAttribute("coverPhotoURL", user.getCoverPhotoURL());
+		request.setAttribute("profilePictureName", new File(user.getProfilePictureURL()).getName());
+		request.setAttribute("coverPhotoName", new File(user.getCoverPhotoURL()).getName());
 		request.setAttribute("affection", user.getAffection());
 		request.setAttribute("photoViews", user.getPhotoViews());
+		
 		return "profile";
 	}
 
@@ -227,6 +237,9 @@ public class ProfileController {
 			model.addAttribute("user", user);
 			int profileUserId = userDAO.getUserIDByUsername(username);
 			List<Album> albums = userDAO.getAllAlbums(profileUserId);
+			
+			model.addAttribute("coverPhotoName", new File(user.getCoverPhotoURL()).getName());
+			model.addAttribute("profilePictureName", new File(user.getProfilePictureURL()).getName());
 
 			model.addAttribute("albums", albums);
 			if (request.getSession().getAttribute("user_id") != null) {

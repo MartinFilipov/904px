@@ -34,7 +34,7 @@ public class UploadController {
 	@Autowired
 	private UserDAO userDAO;
 	
-	private static final String FILE_PATH = "E:\\Uploads\\";
+	private static final String FILE_PATH = "D:\\Uploads\\";
 	
 	@RequestMapping(value="/upload", method= RequestMethod.GET)
 	public String loadPage(Model model, HttpServletRequest request) {
@@ -63,9 +63,10 @@ public class UploadController {
 		String usernameOfFileOwner = "";
 		try {
 			usernameOfFileOwner = userDAO.getUsernameOfFileOwnerByFileName(fileName);
+			System.out.println("========================= " + usernameOfFileOwner);
 		} catch (PostException e) {
 			try {
-				usernameOfFileOwner = userDAO.getUsername((int)request.getSession(false).getAttribute("user_id"));
+				usernameOfFileOwner = userDAO.getUsername((int)request.getSession().getAttribute("user_id"));
 			} catch (UserException e1) {
 				e1.printStackTrace();
 				System.out.println("Could not get username from session");

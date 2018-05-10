@@ -78,6 +78,9 @@
 </c:if>
 </body>
 
+
+<script src="/904px/js/likeDislike.js"></script>
+
 <script>
 
 	function like(varId){
@@ -109,38 +112,7 @@
 			data : null
 		});
 	}
-	/*
-	$("#likeButton").click(function() {
-		console.log($("#commentID").html());
-		var postID = $("#postID").html();
-		var commentID = $("#commentID").html();
-		var likes = $("#likes").html();
-		$("#likes").html(+likes + 1);
-		$("#likeButton").hide();
-		$("#dislikeButton").show();
-		$.ajax({
-			url : '/904px/postDetails/' + postID + '/' + commentID + '/like',
-			type : 'POST',
-			data : null
-		});
-	})
-		$("#dislikeButton").click(
-			function() {
-				console.log($("#commentID").html());
-				var postID = $("#postID").html();
-				var commentID = $("#commentID").html();
-				var likes = $("#likes").html();
-				$("#likes").html(+likes - 1);
-				$("#likeButton").show();
-				$("#dislikeButton").hide();
-				$.ajax({
-					url : '/904px/postDetails/' + postID + '/' + commentID
-							+ '/dislike',
-					type : 'POST',
-					data : null
-				});
-			})
-			*/
+
 	$("#addComment").click(function() {
 		var postID = $("#postID").html();
 		var comment = $("#text").val();
@@ -178,6 +150,6 @@
 		$('#newComments').html(newComments+json1);
 	}
 	
-
 </script>
+
 </html>

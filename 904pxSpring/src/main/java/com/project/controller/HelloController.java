@@ -21,8 +21,6 @@ public class HelloController {
 	
 	@Autowired
 	private PostDAO postDAO;
-
-
 	
 	@RequestMapping()
 	public String sayHello(HttpServletRequest request, Model model) {
