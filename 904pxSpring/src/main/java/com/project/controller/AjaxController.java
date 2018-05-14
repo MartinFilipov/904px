@@ -6,12 +6,14 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.model.ajax.AjaxResponseBody;
+import com.project.model.ajax.CommentText;
 import com.project.model.post.Comment;
 import com.project.model.post.PostDAO;
 import com.project.model.post.PostException;
@@ -43,9 +45,10 @@ public class AjaxController {
 
 	@ResponseBody
 	@RequestMapping(value = "/postDetails/{postId}/addComment/{comment}", method = RequestMethod.POST)
-	public AjaxResponseBody addComment(HttpServletRequest request, @PathVariable(value = "postId") Integer postId,
-			@PathVariable(value = "comment") String comment) {
-
+	public AjaxResponseBody addComment(HttpServletRequest request,
+			@PathVariable(value = "postId") Integer postId,
+			@PathVariable(value = "comment") String comment){
+		
 		AjaxResponseBody result = new AjaxResponseBody();
 		if (comment.trim().length() == 0) {
 			result.setMsg("Cannot post empty comments");
@@ -53,7 +56,6 @@ public class AjaxController {
 			result.setResult(null);
 		} else {
 
-			System.out.println("\n\n\n Ajax controller \n\n");
 			int user_id = (int) request.getSession(false).getAttribute("user_id");
 			postDAO.addComment(user_id, postId, comment);
 			try {

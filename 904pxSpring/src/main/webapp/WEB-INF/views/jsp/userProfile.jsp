@@ -28,13 +28,13 @@
 	</c:if>
 
 	<c:if test="${profilePictureName != ''}">
-		<img style="display: block;" src="/904px/download/${profilePictureName}" width="350">
+		<img style="display: block;" src="/904px/download/${user.username}/${profilePictureName}" width="350">
 	</c:if>
 
 	<hr/>
 
 	<c:if test="${coverPhotoName != ''}">
-		<img style="display: block;" src="/904px/download/${coverPhotoName }" width="350">
+		<img style="display: block;" src="/904px/download/${user.username}/${coverPhotoName }" width="350">
 	</c:if>
 
 </div>

@@ -42,7 +42,7 @@
 						<a href="/904px/profile/${comment.username}">${comment.username}</a>
 					</h4>
 
-					<p>${comment.comment}</p>
+					<p><c:out value="${comment.comment}"></c:out></p>
 
 					Likes:
 					<div id="likes${comment.id}">${comment.likes}</div>
@@ -76,11 +76,12 @@
 
 	<div class="col-md-4">
 		<div class="card my-4">
-			<p>
-				Likes: <div id="post_likes">${post.likes}</div>
-				<b><i> Views: ${post.views}</i></b>
-				<b><i>Rating: ${post.rating}</i></b>
-			</p>
+		<p>Likes:
+		<div id="post_likes">${post.likes}</div>
+		Views: ${post.views} Rating: ${post.rating}
+
+		</p>
+
 			<c:if test="${not empty sessionScope.user_id}">
 				<c:if test="${liked}">
 					<button id="dislike_button" onclick="decreaseLikes()">
@@ -203,7 +204,10 @@ function dislike(varId){
 		data : null
 	});
 }
-$("#addComment").click(function() {
+
+
+$("#addComment").click(function() {7
+	
 	var postID = $("#postID").html();
 	var comment = $("#text").val();
 	$("#text").val('');
@@ -235,7 +239,7 @@ function display(data) {
 	var json = "<h4>Ajax Response</h4><pre>"
 			+"<h3>"+username+"</h3>"
 			+ JSON.stringify(data, null, 4) + "</pre>";
-	
+	 
 	var json1='<div title="Border" style="border: 1px dotted black;">'+
 		'<a href="/904px/profile/'+username+'">'+
 		'<h4>'+username+'</h4></a>'+'<p>'+comment+'</p><h6>Likes:'+

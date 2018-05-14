@@ -34,6 +34,7 @@ public class PostDAO {
 	private static final String POST_DATA = "SELECT p.image_url, p.description, p.nsfw, p.title, p.date_uploaded, p.views, p.rating, ";
 	private static final String LOCATION_DATA = "l.city, l.country, ";
 	private static final String IMAGE_CHARACTERISTICS_DATA = "i.date_taken, i.exposure_time, i.f_number, i.focal_length, i.iso_speed_ratings, ";
+	private static final String GET_TOTAL_POST_VIEWS_OF_USER="select SUM(views) from posts p join users u on u.user_id=p.user_id where p.user_id=?;";
 	private static final String POST_LIKES =
 			"(SELECT COUNT(*) FROM posts_has_likes phs WHERE phs.post_id = p.post_id) AS likes ";
 	private static final String GET_POST_BY_ID = POST_DATA + POST_LIKES + ", " + LOCATION_DATA + IMAGE_CHARACTERISTICS_DATA
@@ -206,6 +207,22 @@ public class PostDAO {
 			e.printStackTrace();
 		}
 		return INVALID_ID;
+	}
+	
+	public int getUsersTotalPostViews(int user_id) {
+		int totalViews=0;
+		try {
+			PreparedStatement statement = database.getConnection().prepareStatement(GET_TOTAL_POST_VIEWS_OF_USER);
+			statement.setInt(1, user_id);
+			ResultSet set = statement.executeQuery();
+			if (set.next()) {
+				totalViews= set.getInt(KEY_COLUMN_ID);
+			}
+		} catch (SQLException e) {
+			System.out.println("--selectCategory-- SQL syntax error");
+			e.printStackTrace();
+		}
+		return totalViews;
 	}
 
 	public int uploadPostToUser(int userId, String imageURL, String title, String description, String category,

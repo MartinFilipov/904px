@@ -34,7 +34,7 @@ public class UploadController {
 	@Autowired
 	private UserDAO userDAO;
 	
-	private static final String FILE_PATH = "D:\\Uploads\\";
+	private static final String FILE_PATH = "E:\\Uploads\\";
 	
 	@RequestMapping(value="/upload", method= RequestMethod.GET)
 	public String loadPage(Model model, HttpServletRequest request) {
@@ -81,14 +81,29 @@ public class UploadController {
 		}
 	}
 	
+	@RequestMapping(value="/download/{username}/{filename:.+}", method = RequestMethod.GET)
+	public void downloadProfileOrCoverPhoto(HttpServletResponse response, HttpServletRequest request, @PathVariable("filename") String fileName,@PathVariable("username") String username) throws PostException {
+		
+		File serverFile = new File(FILE_PATH + username + "\\" + fileName);
+		try {
+			Files.copy(serverFile.toPath(), response.getOutputStream());
+		} catch (IOException e) {
+			throw new PostException("Could not download image",e);
+		}
+	}
+	
 	@RequestMapping(value="/uploadImage", method=RequestMethod.POST)
 	public String selectImage(Model model, HttpServletRequest request, @RequestParam("filename") MultipartFile file) throws PostException, UserException {
 		if (request.getSession().getAttribute("user_id") == null) {
 			return "forward:/index";
 		}
+		if (!file.getContentType().startsWith("image")) {
+			return "upload";
+		}
 		
 		try {
-			String fileName = file.getOriginalFilename();			
+			String fileName = file.getOriginalFilename();
+			
 			if (fileName != "") {			
 				String username = userDAO.getUsername((int)request.getSession(false).getAttribute("user_id"));
 				File usernameFolder = new File(FILE_PATH + username);

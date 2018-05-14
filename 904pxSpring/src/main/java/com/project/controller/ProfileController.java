@@ -35,8 +35,14 @@ public class ProfileController {
 	@Autowired
 	private PostDAO postDAO;
 
-	private static final String FILE_PATH = "D:\\Uploads\\";
+	private static final String FILE_PATH = "E:\\Uploads\\";
 
+	
+	@RequestMapping(value = "*")
+	public String returnToHome() {
+		return "forward:/index";
+	}
+	
 	@RequestMapping(method = RequestMethod.GET, value = "/editProfile")
 	public String getProfileEdit(HttpServletRequest request) {
 		if (request.getSession().getAttribute("user_id") == null) {
@@ -70,6 +76,9 @@ public class ProfileController {
 		if (request.getSession().getAttribute("user_id") == null) {
 			return "login";
 		}
+		
+		
+		
 
 		int userID = (int) request.getSession(false).getAttribute("user_id");
 
@@ -88,7 +97,9 @@ public class ProfileController {
 			String fullProfilePicturePath = "";
 
 			if (profilePictureName != "") {
-
+				if (!profilePicture.getContentType().startsWith("image")) {
+					return "editProfile";
+				}
 				String username = userDAO.getUsername((int) request.getSession(false).getAttribute("user_id"));
 				
 				File usernameFolder = new File(FILE_PATH + username);
@@ -114,7 +125,9 @@ public class ProfileController {
 			String fullCoverPhotoPath = "";
 
 			if (coverPhotoName != "") {
-
+				if (!coverPhoto.getContentType().startsWith("image")) {
+					return "editProfile";
+				}
 				String username = userDAO.getUsername((int) request.getSession(false).getAttribute("user_id"));
 				
 				File usernameFolder = new File(FILE_PATH + username);
@@ -218,9 +231,10 @@ public class ProfileController {
 		request.setAttribute("firstName", user.getFirstName());
 		request.setAttribute("lastName", user.getLastName());
 		request.setAttribute("profilePictureName", new File(user.getProfilePictureURL()).getName());
+		System.out.println(new File(user.getProfilePictureURL()).getName());
 		request.setAttribute("coverPhotoName", new File(user.getCoverPhotoURL()).getName());
 		request.setAttribute("affection", user.getAffection());
-		request.setAttribute("photoViews", user.getPhotoViews());
+		request.setAttribute("photoViews", postDAO.getUsersTotalPostViews(userID));
 		
 		return "profile";
 	}

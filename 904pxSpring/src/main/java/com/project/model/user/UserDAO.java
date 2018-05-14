@@ -22,6 +22,7 @@ public class UserDAO implements IUserDAO {
 	private static final int KEY_COLUMN_ID = 1;
 	private static final String GET_USERNAME_OF_FILE_OWNER_BY_FILE_NAME = 
 			"SELECT u.username from posts p JOIN users u ON p.user_id = u.user_id WHERE image_url LIKE ?;";
+	private static final String GET_USERNAME_OF_PROFILE_PICTURE="SELECT username from users where profile_picture LIKE ? or cover_photo LIKE ?;";
 	private static final String ADD_USER_TO_DB = "INSERT INTO users(username, password, email) VALUES (?,sha1(?),?);";
 	private static final String VALIDATE_USER = "SELECT user_id, username, password FROM users WHERE username = ? AND password = sha1(?);";
 	private static final String GET_USERNAME_FROM_DB = "SELECT username from users WHERE user_id = ?;";
@@ -429,6 +430,23 @@ public class UserDAO implements IUserDAO {
 		try {
 			PreparedStatement st = database.getConnection().prepareStatement(GET_USERNAME_OF_FILE_OWNER_BY_FILE_NAME);
 			st.setString(1, "%"+fileName);
+			
+			ResultSet set = st.executeQuery();
+			
+			if (set.next()) {
+				return set.getString("username");
+			} else {
+				throw new PostException("Could not get username");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new PostException("Could not get username");
+		}
+	}
+	public String getUsernameOfCoverPhotoFileOwnerByFileName(String fileName) throws PostException {
+		try {
+			PreparedStatement st = database.getConnection().prepareStatement(GET_USERNAME_OF_PROFILE_PICTURE);
+			st.setString(1, "%"+fileName+"%");
 			
 			ResultSet set = st.executeQuery();
 			

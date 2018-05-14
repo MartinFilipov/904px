@@ -120,7 +120,6 @@
 				document.getElementById("password2").setCustomValidity("Passwords do not Match");
 			else
 				document.getElementById("password2").setCustomValidity('');
-			//empty string means no validation error
 		}
 	</script>
 

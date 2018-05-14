@@ -27,7 +27,9 @@ import org.springframework.web.servlet.view.JstlView;
 @EnableScheduling
 public class SpringWebConfig extends WebMvcConfigurerAdapter {
 	
-    @Override
+    private static final int MAX_UPLOAD_SIZE = 100_000_000;
+
+	@Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
     	registry.addResourceHandler("/img/**").addResourceLocations("/static/images/");
         registry.addResourceHandler("/css/**").addResourceLocations("/static/css/");
@@ -44,7 +46,7 @@ public class SpringWebConfig extends WebMvcConfigurerAdapter {
     public CommonsMultipartResolver multipartResolver() {
         CommonsMultipartResolver resolver=new CommonsMultipartResolver();
         resolver.setDefaultEncoding("utf-8");
-        resolver.setMaxUploadSize(100_000_000);
+        resolver.setMaxUploadSize(MAX_UPLOAD_SIZE);
         return resolver;
     }
 	
